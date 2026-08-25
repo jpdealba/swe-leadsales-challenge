@@ -19,5 +19,17 @@ export class Lead {
     public stageId: string
   ) {
     this.phone = Lead.normalizePhone(phone);
+
+    if (this.phone === '') {
+      throw new Error(`A lead needs a phone number with digits in it, got "${phone}"`);
+    }
+
+    if (name.trim() === '') {
+      throw new Error('A lead needs a name');
+    }
+
+    if (stageId.trim() === '') {
+      throw new Error('A lead needs a stage');
+    }
   }
 }

@@ -14,7 +14,31 @@ export class Funnel {
   constructor(
     public readonly id: string,
     public readonly stages: Stage[]
-  ) {}
+  ) {
+    if (id.trim() === '') {
+      throw new Error('A funnel needs an id');
+    }
+
+    if (stages.length === 0) {
+      throw new Error(`Funnel ${id} needs at least one stage`);
+    }
+
+    for (const stage of stages) {
+      if (stage.id.trim() === '' || stage.name.trim() === '') {
+        throw new Error(`Funnel ${id} has a stage with a blank id or name`);
+      }
+
+      if (stage.capacity !== undefined && (!Number.isInteger(stage.capacity) || stage.capacity < 0)) {
+        throw new Error(
+          `Stage ${stage.id} has an invalid capacity of ${stage.capacity}`
+        );
+      }
+    }
+
+    if (new Set(stages.map((stage) => stage.id)).size !== stages.length) {
+      throw new Error(`Funnel ${id} has two stages sharing an id`);
+    }
+  }
 
   /** The stage every lead enters when it is added to the funnel. */
   firstStage(): Stage {
