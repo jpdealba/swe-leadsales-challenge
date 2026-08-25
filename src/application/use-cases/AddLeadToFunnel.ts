@@ -2,6 +2,7 @@ import { Funnel } from '../../domain/entities/Funnel';
 import { Lead } from '../../domain/entities/Lead';
 import { LeadRepository } from '../../domain/repositories/LeadRepository';
 import { DuplicateLeadError } from '../../domain/errors/DuplicateLeadError';
+import { StageCapacityExceededError } from '../../domain/errors/StageCapacityExceededError';
 
 export interface AddLeadToFunnelData {
   phone: string;
@@ -23,10 +24,17 @@ export class AddLeadToFunnel {
   ) {}
 
   async execute(data: AddLeadToFunnelData): Promise<void> {
-    const lead = new Lead(data.phone, data.name, this.funnel.firstStage().id);
+    const firstStage = this.funnel.firstStage();
+    const lead = new Lead(data.phone, data.name, firstStage.id);
 
     if ((await this.repository.findByPhone(lead.phone)) !== null) {
       throw new DuplicateLeadError(lead.phone);
+    }
+
+    const occupancy = (await this.repository.findByStage(firstStage.id)).length;
+
+    if (!this.funnel.hasRoom(firstStage, occupancy)) {
+      throw new StageCapacityExceededError(firstStage.id);
     }
 
     await this.repository.save(lead);
