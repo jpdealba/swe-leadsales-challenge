@@ -1,6 +1,7 @@
 import { Funnel } from '../../domain/entities/Funnel';
 import { Lead } from '../../domain/entities/Lead';
 import { LeadRepository } from '../../domain/repositories/LeadRepository';
+import { DuplicateLeadError } from '../../domain/errors/DuplicateLeadError';
 
 export interface AddLeadToFunnelData {
   phone: string;
@@ -23,6 +24,10 @@ export class AddLeadToFunnel {
 
   async execute(data: AddLeadToFunnelData): Promise<void> {
     const lead = new Lead(data.phone, data.name, this.funnel.firstStage().id);
+
+    if ((await this.repository.findByPhone(lead.phone)) !== null) {
+      throw new DuplicateLeadError(lead.phone);
+    }
 
     await this.repository.save(lead);
   }
