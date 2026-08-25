@@ -1,0 +1,3161 @@
+╭─── Claude Code v2.1.241 ─────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting        │
+│              Welcome back Juan Pablo!              │ started                 │
+│                                                    │ Run /init to create a … │
+│                       ▐▛███▛█                      │ ─────────────────────── │
+│                      ▝▜██████▀                     │ What's new              │
+│                        ▝▝ ▝▝                       │ Bug fixes and reliabil… │
+│   Opus 5 · Claude Max · jpdeaty1207@gmail.com's    │ Bug fixes and reliabil… │
+│   Organization                                     │ Cost estimates (`/cost… │
+│ ~\Documents\Programacion\personal\swe-leadsales-c… │ /release-notes for more │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+
+❯ /init read readme.md and analysis.md. create a CLAUDE.md at the repo root     
+with:                                                                           
+1- what this project is                                                         
+2- the 4 business rules                                                         
+3- the constraints for THE WHOLE session (dependency rules, don't create new    
+files unless necessary, the                                                     
+architecture specified in the readme, no single-use abstractions, minimum code, 
+etc). Also create a short CONTEXT.md with the domain glossary, one line per     
+term,                                                                           
+using the exact word the business uses                                          
+
+● I'll read the repo docs first.
+
+  Read 1 file, listed 1 directory, ran 1 shell command (ctrl+o to expand)
+
+● Now writing the two files.
+
+  Read 2 files (ctrl+o to expand)
+
+● Created two files at the repo root.
+
+  CLAUDE.md
+  1. What this project is — the Leadsales take-home: a Lead Funnel Service
+     skeleton where every behavior is a TODO, plus the Part 2 written analysis.
+     Notes that the scaffold is deliberately skeletal and that assumptions are
+     graded.
+  2. The 4 business rules — verbatim from the README, each mapped to its error
+     class, plus the "first stage on add" and "no capacity = unbounded" details,
+     and an explicit note that gaps (missing lead, phone format, empty funnel,
+     capacity 0) are underspecified on purpose.
+  3. Session constraints — hexagonal dependency direction spelled out per layer
+     (domain imports nothing inward-bound; use cases depend on the
+     LeadRepository interface, never the in-memory class; wiring only in
+     index.ts), no new files beyond tests/*.test.ts and one optional HTTP
+     adapter, no single-use abstractions, no new deps, no speculative
+     configurability (per-workspace rules are a Part 2 question, not something
+     to build), surgical edits matching existing style, and verification via npm
+     test / build / start before claiming done. Commands section at the end,
+     including single-test invocations.
+
+  CONTEXT.md — 15 glossary lines using the business's own words (funnel, stage,
+  capacity, full, lead, add, move, transition, backward move…), with an explicit
+  "don't rename to pipeline/column/contact" rule in CLAUDE.md pointing at it.
+
+  One thing worth knowing before you start coding: jest.config.js sets roots: 
+  ['<rootDir>/tests'] but no tests/ directory exists, so npm test passes
+  vacuously today — that's why creating tests/ is carved out as an allowed
+  exception.
+
+✻ Cooked for 1m 1s
+
+❯ Now in read-only mode: go through all of src/ and tell me in short lists: 1-  
+  what                                                                          
+  is already implemented 2- what is pending 3- what design decisions have       
+  already                                                                       
+  been made for me and how they constrain the implementation. Point out any     
+  detail                                                                        
+  that strikes you as a deliberate hint or intention from the author            
+
+● I've read every file in src/ already. Read-only, no changes made.
+
+  1. Already implemented
+
+  - The four error classes — complete, each with a canned message.
+    DuplicateLeadError(phone), StageNotFoundError(stageId),
+    StageCapacityExceededError(stageId) take an identifier;
+    InvalidStageTransitionError(message) takes a free-form message.
+  - LeadRepository interface — save, findByPhone, findByStage, all async.
+  - Stage type — { id, name, capacity?: number }.
+  - Constructor signatures everywhere — Lead(phone, name, stageId), Funnel(id, 
+    stages), both use cases (repository, funnel), and the use-case input DTOs
+    AddLeadToFunnelData { phone, name } / MoveLeadToStageData { phone, 
+    targetStageId }.
+  - The funnel fixture in index.ts — four stages, qualified capacity 2, the rest
+    uncapped.
+
+  2. Pending
+
+  - Lead constructor validations.
+  - Funnel constructor validations + all behavior (find a stage, first stage,
+    capacity check) — the class body is otherwise empty.
+  - AddLeadToFunnel.execute and MoveLeadToStage.execute — both throw Not 
+    implemented.
+  - All three InMemoryLeadRepository methods — all three throw.
+  - The main() simulation body in
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ Now in read-only mode: go through all of src/ and tell me in short lists: 1-  
+  what                                                                          
+  is already implemented 2- what is pending 3- what design decisions have       
+  already                                                                       
+  been made for me and how they constrain the implementation. Point out any     
+  detail                                                                        
+  that strikes you as a deliberate hint or intention from the author            
+
+● Read-only. Based on the full contents of src/ I already read:
+
+  1. Already implemented
+
+  - The four error classes — complete. DuplicateLeadError(phone),
+    StageNotFoundError(stageId), StageCapacityExceededError(stageId) build their
+    own messages; InvalidStageTransitionError(message) takes a free-form
+    string.
+  - LeadRepository interface — save, findByPhone, findByStage, all async.
+  - Stage type — { id: string; name: string; capacity?: number }.
+  - Every constructor signature — Lead(phone, name, stageId), Funnel(id, 
+    stages), both use cases (repository, funnel).
+  - Both use-case input DTOs — AddLeadToFunnelData { phone, name },
+    MoveLeadToStageData { phone, targetStageId }.
+  - The funnel fixture in index.ts — new, contacted, qualified (capacity 2),
+    closed, already wired to a repository and both use cases.
+
+  2. Pending
+
+  - Lead: constructor validations (body is a bare // TODO).
+  - Funnel: constructor validations and all behavior — find a stage, know the
+    first stage, check capacity. The class is otherwise empty.
+  - AddLeadToFunnel.execute and MoveLeadToStage.execute — both throw new 
+    Error('Not implemented').
+  - All three InMemoryLeadRepository methods — all three throw.
+  - The main() body in index.ts — currently prints Simulation not implemented 
+    yet.
+  - tests/ — doesn't exist. Jest's roots points at it, so npm test passes
+    vacuously today.
+  - ANALYSIS.md — all five sections empty.
+
+  3. Decisions already made for you (and what they constrain)
+
+  - Lead.stageId is public and mutable; phone and name are readonly. Leads are
+    meant to be mutated in place on a move, not rebuilt. Identity is the phone;
+    the stage is the only thing that changes.
+  - The repository has save but no update. So save must be an upsert keyed by
+    phone — that's the only way a move can persist. It also means the in-memory
+    store wants to be a Map<phone, Lead>.
+  - Both use cases receive the Funnel in the constructor, not in execute. One
+    instance serves one funnel; the funnel is in-memory config, not something
+    loaded per call. There is no FunnelRepository, and nothing here is
+    multi-funnel — findByPhone and findByStage take no funnel id, so "in a
+    funnel" is scoped by the repository instance itself.
+  - execute returns Promise<void>. Results are communicated by throwing, not by
+    a result object. Don't invent a Result/Either type.
+  - Capacity lives on Stage, and stages live inside Funnel, but lead counts live
+    in the repository. Neither object alone can answer "is this stage full?" —
+    the use case has to bring them together (findByStage(...).length vs
+    stage.capacity). That's the seam Part 2's concurrency question is aimed at.
+  - capacity is optional. Absent means unbounded; that's a rule you get for
+    free, but it also means capacity: 0 is a real, distinct value you have to
+    decide about.
+  - One error class per file, this.name set explicitly. Match that if you add
+    anything.
+  - strict: true, no noUncheckedIndexedAccess. stages[0] types as Stage, not
+    Stage | undefined — so an empty-stages funnel will not be caught by the
+    compiler. You have to guard it in the constructor.
+
+  Details that read as deliberate hints
+
+  - InvalidStageTransitionError takes a message while the other three take an 
+    id. The others cover one situation each; this one is built to cover several.
+    Rule 4 (same-stage move) is the only transition rule stated — the flexible
+    signature is an invitation to notice that other transitions might be invalid
+    too, and Part 2 §4 then asks about backward moves and approval-gated
+    Closed. My read: use it for the same-stage case now, and mention in
+    ANALYSIS.md that the signature anticipates more.
+  - qualified is the only stage with capacity: 2, and it's third of four. That
+    fixture is designed so a capacity rejection is reachable, and so is a
+    backward move out of it. It's the scenario set for your simulation.
+  - The Funnel doc comment names three behaviors — "finding a stage, knowing the
+    first stage, checking capacity". That's a checklist, and it's also a hint
+    that these belong on the entity rather than in the use cases.
+  - LeadRepository's comment says "adjust or extend this interface if your use 
+    cases need it". Explicit permission — but it's also bait. findByStage
+    returning Lead[] when you only need a count is exactly what Part 2 §3 (500k
+    leads, first 50 per stage) is about. Extending it is defensible; extending
+    it silently is the trap.
+  - findByStage exists but nothing in Part 1 obviously needs it — except the
+    capacity check. That's the intended consumer, and it confirms capacity is
+    enforced by counting, not by a maintained counter.
+  - No MoveLeadToStage error for "lead not found" among the four classes, yet
+    the use case's doc comment says "The lead must exist in the funnel." A gap
+    left on purpose — you have to choose (a new error, reusing one, or a generic
+    throw) and document it. This is the single most likely thing they'll ask
+    about in review.
+  - AddLeadToFunnelData has no stageId. Confirms rule 1's "new leads always
+    enter the first stage" is not overridable — don't add a parameter for it.
+  - The README's bonus asks for JSON in/out "simulating HTTP" and there's no
+    http dir or dependency. That's a nudge toward a plain function in
+    infrastructure/, not Express.
+
+✻ Cogitated for 27s
+
+❯ Now (still read-only) compare the 4 rules in the readme against the actual    
+  code.                                                                         
+  List everything that is underspecified: cases the rules don't cover, errors   
+  the                                                                           
+  readme mentions but that don't exist as a class, ambiguous validations,       
+  boundary                                                                      
+  values left undefined. For each one give me your recommendation in one line   
+  and                                                                           
+  the risk of the alternative. Do NOT write code                                
+
+● Read-only — nothing written. Comparing README §Business Rules + §Part 1
+  against the actual signatures in src/.
+
+  ---
+
+  A. Errors the flow needs that have no class
+
+  1. Lead not found on move. MoveLeadToStage's JSDoc says "The lead must exist
+  in the funnel" — but the README's Part 1 list for that use case names only
+  three validations (stage exists, capacity, transition), and there is no
+  LeadNotFoundError. The gap is real and it's the one asymmetry between the
+  code's comments and the README.
+  - Recommend: add LeadNotFoundError as a fifth error class, matching the other
+    four's shape — it's a distinct business outcome and a caller must be able to
+    tell it apart.
+  - Risk of the alternative: reusing InvalidStageTransitionError (its free-form
+    message makes it tempting) conflates "your lead doesn't exist" with "that
+    move isn't allowed", which an HTTP adapter would map to 404 vs 409 — one
+    error class means one wrong status code forever.
+
+  2. Nothing distinguishes "stage exists but is full" at add-time vs move-time.
+  Both paths throw StageCapacityExceededError(stageId).
+  - Recommend: keep one class — the stage id is enough context, and the caller
+    knows which operation it invoked.
+  - Risk of the alternative: separate add/move capacity errors doubles the error
+    surface for zero caller benefit, and the README explicitly folds both under
+    rule 3.
+
+  ---
+
+  B. Cases the four rules don't cover
+
+  3. Order of validation when several rules fail at once (e.g. move a lead to a
+  nonexistent stage that is also its current one, or to a stage that is both
+  full and its current stage). Rules 2–4 are listed but not ordered.
+  - Recommend: existence → same-stage → capacity, and document it; a stage that
+    doesn't exist can't be reasoned about, and rule 4 is a cheap identity check
+    that shouldn't be masked by a capacity count.
+  - Risk of the alternative: checking capacity before rule 4 means a lead
+    sitting in a full qualified gets StageCapacityExceededError when asked to
+    move to qualified — a nonsense message the reviewer will pounce on.
+
+  4. Backward moves (Closed → New). Rule 4 forbids only same-stage; Part 2 §4
+  says "one customer forbids backward moves", implying today they're permitted.
+  - Recommend: allow them, and state the assumption — the evolution question
+    only makes sense if the default is permissive.
+  - Risk of the alternative: forbidding them invents a fifth rule, and it
+    silently answers Part 2 §4 in the code, removing the thing you're supposed
+    to discuss.
+
+  5. Skipping stages (New → Closed directly). Not addressed at all.
+  - Recommend: allow — the funnel is an ordered board, not a state machine, and
+    nothing in the rules says adjacency.
+  - Risk of the alternative: enforcing adjacency makes the qualified capacity-2
+    fixture nearly untestable and imposes a rule no customer asked for.
+
+  6. Multi-funnel scoping. Rule 1 says "twice in a funnel", but
+  findByPhone(phone) takes no funnel id and there is no FunnelRepository.
+  - Recommend: treat one repository instance as scoped to one funnel, and say so
+    — the constructor injection of Funnel into both use cases already assumes
+    it.
+  - Risk of the alternative: adding a funnelId parameter to the repository
+    expands the given interface for a requirement the test never states, and
+    you'd still have no way to load a second funnel.
+
+  7. Idempotent / repeated operations — adding the same lead twice is rule 1,
+  but re-issuing the same move (already applied) is just rule 4.
+  - Recommend: let rule 4 handle it; no special idempotency key.
+  - Risk of the alternative: building idempotency now is speculative
+    infrastructure and pre-empts the concurrency discussion in Part 2 §1.
+
+  8. No createdAt on Lead — yet Part 2 §3 asks for "the first 50 leads of each
+  stage, most recent first", which is unorderable with the current entity.
+  - Recommend: leave Lead as-is and name the missing timestamp explicitly in
+    ANALYSIS.md §3 as the first thing that breaks.
+  - Risk of the alternative: quietly adding a timestamp field expands the given
+    entity and spends your Part 2 answer inside the code where the reviewer
+    won't read it as analysis.
+
+  9. findByStage return order is undefined — insertion order today, by accident
+  of the Map.
+  - Recommend: don't promise an order in Part 1; note that the interface's
+    silence is the actual §3 problem.
+  - Risk of the alternative: sorting inside the in-memory repo implies a
+    contract the interface doesn't declare and that a real DB adapter would have
+    to honor.
+
+  10. Nothing removes a lead — no delete, no way to leave the funnel.
+  - Recommend: out of scope; don't add it.
+  - Risk of the alternative: adding removal opens capacity-freeing semantics
+    that no rule covers.
+
+  ---
+
+  C. Ambiguous validations
+
+  11. Phone normalization. +52 55 1234 5678 vs 525512345678 — rule 1's "same
+  phone number" doesn't define sameness.
+  - Recommend: compare the raw trimmed string, and document that
+    normalization/E.164 is deliberately out of scope.
+  - Risk of the alternative: implementing partial normalization (stripping
+    spaces and dashes but not country-code logic) creates a half-correct
+    identity rule that's worse than an explicit non-goal.
+
+  12. Phone format validation — must it be digits? A minimum length?
+  - Recommend: reject only empty/whitespace; no regex.
+  - Risk of the alternative: a format regex will reject valid international
+    numbers and becomes a bug the reviewer can demo in thirty seconds.
+
+  13. Lead.name — no rule mentions it at all.
+  - Recommend: reject empty/whitespace, nothing more.
+  - Risk of the alternative: length caps or character rules are invented
+    business logic.
+
+  14. Lead.stageId at construction — the entity can't verify the stage exists
+  (it has no Funnel reference).
+  - Recommend: validate non-empty in Lead, leave existence to the use case,
+    which is the only place that holds both.
+  - Risk of the alternative: passing the Funnel into Lead inverts the dependency
+    and turns an entity into an orchestrator.
+
+  15. Stage id case sensitivity / whitespace — 'New' vs 'new'.
+  - Recommend: exact match; the fixture uses lowercase ids consistently.
+  - Risk of the alternative: case-insensitive matching hides typos and makes
+    duplicate-stage-id detection ambiguous.
+
+  16. Funnel constructor: duplicate stage ids — nothing forbids two stages
+  sharing an id.
+  - Recommend: reject at construction — capacity and lookup both become
+    undefined behavior otherwise.
+  - Risk of the alternative: allowing them means findStage silently picks the
+    first and one stage's capacity is unenforceable.
+
+  17. Funnel id and Stage.name — no rules.
+  - Recommend: non-empty checks only.
+  - Risk of the alternative: skipping them entirely is defensible too, but you'd
+    have a Funnel('') in a test and no story for it.
+
+  ---
+
+  D. Boundary values left undefined
+
+  18. capacity: 0. The type allows it, and it's genuinely ambiguous: "closed
+  stage" or "no limit"?
+  - Recommend: treat 0 as a permanently closed stage (any add/move rejected),
+    since undefined already means unbounded.
+  - Risk of the alternative: treating 0 as unlimited gives two spellings for the
+    same meaning and no way to express a closed stage — plus it silently breaks
+    if the first stage is 0.
+
+  19. Negative or non-integer capacity. capacity: -1 / 2.5 typecheck fine under
+  strict.
+  - Recommend: reject in the Funnel constructor as invalid configuration.
+  - Risk of the alternative: letting -1 through makes every capacity comparison
+    pass-or-fail by accident and the failure surfaces far from its cause.
+
+  20. Empty stages: []. tsconfig has strict but not noUncheckedIndexedAccess, so
+  stages[0] types as Stage and the compiler will not catch this — rule 1's
+  "first stage" would be undefined at runtime.
+  - Recommend: reject an empty stage list in the Funnel constructor; it's the
+    one boundary the type system actively hides from you.
+  - Risk of the alternative: deferring the check means AddLeadToFunnel crashes
+    with a TypeError on .id of undefined instead of a domain error.
+
+  21. Capacity comparison at exactly the limit. count === capacity — full or one
+  slot left?
+  - Recommend: full; capacity is "maximum number of leads it can hold" per rule
+    3, so the check is count >= capacity before insertion.
+  - Risk of the alternative: an off-by-one lets capacity: 2 hold three leads —
+    the qualified fixture exists precisely to expose this.
+
+  22. Does the moving lead count toward the target's occupancy? Only matters if
+  source and target coincide.
+  - Recommend: moot once rule 4 is checked before capacity (see #3) — no
+    self-counting case survives.
+  - Risk of the alternative: getting the order wrong reintroduces it and makes a
+    full stage reject its own residents.
+
+  ---
+
+  The three I'd put in front of a reviewer first: #1 (missing LeadNotFoundError
+  — the only place the code's comments and the README disagree), #18 (capacity: 
+  0), and #20 (empty stages, invisible to the compiler because
+  noUncheckedIndexedAccess is off). Each has a defensible answer either way,
+  which is exactly why the README says to document them rather than guess
+  silently.
+
+✻ Crunched for 1m 3s
+
+❯ /grill-with-docs I want to close those assumptions. Interrogate me one        
+question at                                                                     
+a time, with your recommendation and the trade-off. When you're done, summarize 
+the                                                                             
+decisions and write them into ANALYSIS.md section 0.                            
+Already decided: phone numbers are normalized to digits, and the normalization  
+has                                                                             
+to work both when creating a lead and when looking one up by phone.             
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Read the skill's formats. CONTEXT.md exists (flat glossary, no CONTEXT-MAP.md
+  → single context), no docs/adr/ yet. I'll sharpen CONTEXT.md inline as each
+  term resolves and hold ADRs until something earns one.
+
+  Logging what you've already decided:
+
+  ▎ Phone normalization — a phone number is normalized to digits, and the same 
+  ▎ normalization applies on both write (creating a lead) and read (looking one 
+  ▎ up). Identity comparison happens on the normalized form.
+
+  That decision opens a branch it doesn't close, so let's start there.
+
+  ---
+
+  Question 1 of ~8 — Does the lead keep the phone as the agent typed it?
+
+  A sales agent adds a lead and types +52 55 1234 5678. You've decided we
+  normalize to 525512345678 for identity. But Lead.phone in the code is a single
+  readonly field — there is nowhere to put the original.
+
+  So: is the typed form discarded, or preserved alongside the normalized one?
+
+  Scenario that makes it concrete: the agent adds +52 55 1234 5678, then opens
+  the board to call them back. Do they see +52 55 1234 5678 or 525512345678?
+
+  My recommendation: discard it. Store only the normalized digits in Lead.phone.
+  The funnel's job is identity and stage movement, not contact-card
+  presentation — formatting for display is a concern of whatever renders the
+  board, and it can format digits back however it likes.
+
+  The trade-off: you lose the agent's original input, including the country-code
+  intent encoded in the +. If Leadsales ever wants to show the number exactly
+  as captured, or needs to distinguish "the agent meant international" from "the
+  agent typed a local number", that information is gone and unrecoverable from
+  storage. The alternative — a second rawPhone field — preserves it, but adds a
+  field no rule asks for, gives you two things called "phone" that can drift,
+  and invites the reviewer to ask which one is the identity.
+
+  There's also a glossary consequence I'll write down once you answer:
+  CONTEXT.md currently says "Phone number — the lead's identity within a 
+  funnel", which is now imprecise. It needs to say the normalized phone number
+  is the identity.
+
+  What's your call — single normalized field, or keep the raw input too?
+
+✻ Sautéed for 26s
+
+❯ Single normalized field. Discard the raw input.                               
+
+● Recorded. Updating the glossary now, before moving on.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Glossary updated — Phone number now says identity is held in normalized form,
+  and Normalized phone number is defined as its own term with raw phone /
+  formatted phone listed as words to avoid.
+
+  ---
+
+  Question 2 of ~8 — Does digits-only normalization actually make two spellings 
+  of the same human the same lead?
+
+  This is the hole in the decision you've already made. Leadsales is a
+  WhatsApp-first CRM, so numbers arrive from at least two directions: typed by
+  an agent, and captured from a WhatsApp conversation — and those two sources
+  spell the same person differently.
+
+  Scenario: a lead messages the workspace on WhatsApp; the number arrives as +52
+  55 1234 5678 → normalizes to 525512345678. An agent, having spoken to the
+  same person, adds them by hand as 55 1234 5678 → normalizes to 5512345678.
+
+  Digits-only says those are two different leads. Rule 1 does not fire. The
+  board now shows the same human twice, in two stages, and both can be moved
+  independently.
+
+  Same failure with 0052 55 1234 5678 → 00525512345678, a third lead.
+
+  So: is that acceptable, or does identity need country-code awareness?
+
+  My recommendation: accept it. The normalized digit string is the identity,
+  verbatim — no country-code inference, no default region. Then state the
+  collision explicitly in ANALYSIS.md as a known limitation rather than a bug.
+
+  Two reasons. First, doing it properly means E.164 parsing, which means
+  libphonenumber — a new dependency, and the session constraint is that the
+  stack doesn't grow. Second, and more importantly, a correct answer needs a
+  default region per workspace to know that a 10-digit number means Mexico — and
+  there is no workspace entity, no funnel-level config, nothing in the scaffold
+  to hang it on. Inventing one to solve this is a bigger fabrication than the
+  problem.
+
+  The trade-off: you are knowingly shipping a duplicate-detection rule that
+  misses real duplicates. Rule 1 is the first business rule, and a reviewer can
+  break it in one line at the whiteboard. That's survivable if you name the
+  limitation before they do — it reads as a scoping decision. It reads as a hole
+  if they find it first.
+
+  The alternative — normalize by stripping a leading +, 00, or a known country
+  prefix — is worse than it looks: 5512345678 could be a 10-digit local number
+  or a shorter international one, and guessing wrong merges two genuinely
+  different people into one lead. Silent false merges are harder to recover from
+  than visible duplicates.
+
+  Accept the collision and document it, or do you want identity to be
+  country-code aware?
+
+✻ Cogitated for 34s
+
+❯ Accept the collision and document it                                          
+
+● Recorded. Tightening the glossary entry so the sameness rule is unambiguous.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● ---
+
+  Question 3 of ~8 — Where does normalization live, so it can't be bypassed?
+
+  You said normalization has to work on both paths — create and look up. That's
+  a correctness requirement, and the scaffold makes it easy to get wrong,
+  because there are two independent doors into identity:
+
+  - new Lead(phone, ...) — the write path
+  - repository.findByPhone(phone) — the read path
+
+  If only one normalizes, rule 1 breaks in exactly the way you just agreed to
+  accept for country codes — except this time it'd be an outright bug, not a
+  scoping decision. Add +52 55 1234 5678, then add 525512345678: if findByPhone
+  doesn't normalize its argument, the duplicate check misses and you get two
+  leads with the identical normalized phone.
+
+  So there needs to be one function, called from both. The question is where it
+  lives.
+
+  My recommendation: a static normalizePhone(phone: string): string on the Lead
+  entity, called by Lead's constructor (so a Lead can never hold an
+  un-normalized phone) and by InMemoryLeadRepository.findByPhone before it hits
+  the map. One implementation, two call sites, no new file — and the repository
+  already imports Lead, so no new dependency edge.
+
+  The trade-off: the textbook DDD answer here is a PhoneNumber value object, and
+  a reviewer may well ask why you didn't build one. It's a fair question, and
+  my answer would be: it costs a new file, and it ripples through the given
+  interface — Lead.phone: string, findByPhone(phone: string) — so you'd be
+  rewriting the scaffold's signatures to introduce a type with one field and one
+  behavior. The session constraint says no single-use abstractions and don't
+  grow the file count without cause. A static factory-ish helper buys the same
+  guarantee at a fraction of the surface.
+
+  Where it genuinely costs you: Lead.phone stays a string, so nothing in the
+  type system stops someone passing an un-normalized string to a future
+  repository method. The guarantee is by convention and by the two call sites,
+  not by the compiler. A value object would make un-normalized phones
+  unrepresentable. If you expect the reviewer to push hard on tactical DDD
+  patterns, that's the stronger card to play.
+
+  The third option — normalize in the two use cases before touching the
+  repository — I'd reject outright: it leaves the repository callable with a raw
+  phone, and the invariant lives in application code where the next use case
+  will forget it.
+
+  Static helper on Lead, or a PhoneNumber value object?
+✻ Brewed for 42s
+
+❯ Static on Lead, called from the constructor and from MoveLeadToStage — not    
+  from                                                                          
+  the repository. That's an adapter, a domain identity rule there means every   
+  future                                                                        
+  adapter has to remember it                                                    
+
+● You're right, and that's a better rule than the one I proposed.
+  InMemoryLeadRepository is an adapter; if the identity rule lives there, a
+  Postgres or Mongo adapter has to re-implement it correctly or rule 1 quietly
+  breaks. The domain owns identity; adapters store whatever the domain hands
+  them.
+
+  Recording it as: Lead.normalizePhone is the single implementation; every entry
+  point into the domain normalizes before the repository is touched, and the 
+  repository stores and matches the string it is given, verbatim. No CONTEXT.md
+  change — that's a placement decision, not vocabulary.
+
+  That leaves one gap in the boundary you just drew.
+
+  ---
+
+  Question 4 of ~8 — Does AddLeadToFunnel also call normalizePhone explicitly?
+
+  You named the constructor and MoveLeadToStage. MoveLeadToStage clearly needs
+  the explicit call — it only ever holds a raw data.phone and never builds a
+  Lead, so there's no constructor to do it for free.
+
+  AddLeadToFunnel is the ambiguous one, because it does both things: it looks a
+  lead up by phone (the rule-1 duplicate check) and it constructs one. The order
+  decides whether it needs its own call.
+
+  - Construct first: new Lead(data.phone, data.name, firstStage.id) normalizes,
+    then the duplicate check queries with lead.phone — already normalized. No
+    explicit call in the use case.
+  - Query first: findByPhone(data.phone) runs before any Lead exists, so the use
+    case must call Lead.normalizePhone(data.phone) itself, exactly like
+    MoveLeadToStage.
+
+  My recommendation: construct first, query with lead.phone. It gives the use
+  case one fewer thing to remember, and it makes the entity the only place that
+  knows how a phone becomes an identity — which is the boundary you just drew.
+  It also means Lead's own validations (empty phone, empty name) fire before you
+  spend a repository round-trip on an input that was never valid.
+
+  The trade-off: you build a Lead you may be about to throw away, and — the part
+  a reviewer might poke at — you validate shape before you check duplication,
+  so adding an existing lead with a blank name reports the blank name, not the
+  duplicate. I think that's the right precedence anyway (you can't meaningfully
+  talk about a malformed lead being a duplicate), but it is a behavior you're
+  choosing, and error precedence is the same theme as the validation-order
+  question coming up in Q6.
+
+  The alternative — query first — keeps "cheap check before object creation"
+  instincts happy but puts a third explicit normalizePhone call site in the
+  codebase, and every new call site is another place a future contributor can
+  forget.
+
+  Construct-then-query, or query-then-construct?
+
+✻ Brewed for 31s
+
+❯ construct first                                                               
+
+● Locked: construct first, then query with the normalized lead.phone — entity
+  validations fire before the duplicate check, and AddLeadToFunnel never calls
+  normalizePhone itself.
+
+  That's normalization fully closed. Moving to the error surface.
+
+  ---
+
+  Question 5 of ~8 — Does a fifth error class exist for "lead not found"?
+
+  This is the only place where the scaffold's own comments and the README
+  disagree, so it's the assumption most likely to come up in review.
+
+  MoveLeadToStage's JSDoc — written by the test's author — says:
+
+  ▎ - The lead must exist in the funnel.
+
+  But the README's Part 1 checklist for that use case names only three
+  validations (stage exists → StageNotFoundError, capacity →
+  StageCapacityExceededError, transition → InvalidStageTransitionError). And
+  src/domain/errors/ contains exactly four classes. There is no
+  LeadNotFoundError.
+
+  So the code asks you to enforce a rule the README gives you no error for.
+  Moving an unknown phone has to do something.
+
+  My recommendation: add LeadNotFoundError(phone) as a fifth class, in its own
+  file, matching the shape of the other four exactly — super(...) with a canned
+  message, this.name set. Then check it first in MoveLeadToStage, before the
+  stage checks.
+
+  The reasoning: it's a genuinely distinct business outcome. Every other failure
+  in this service means "your request conflicts with the funnel's state" — this
+  one means "the thing you named doesn't exist." An HTTP adapter maps that to
+  404 and the rest to 409/422. If they share a class, the adapter cannot tell
+  them apart and one of those is permanently the wrong status code.
+
+  The trade-off: it's a new file, and the session constraint says don't add
+  files without cause. A reviewer could read it as ignoring the README's
+  explicit list of four. I think the JSDoc is the stronger signal — the author
+  wrote the requirement into the file you're asked to implement — but you're
+  making a judgment call about which of two authored artifacts wins, and you
+  should say so out loud in ANALYSIS.md rather than let it look like you
+  miscounted.
+
+  The alternative — reusing InvalidStageTransitionError, whose free-form message
+  constructor makes it suspiciously convenient — is the trap I'd avoid. That
+  signature is flexible so it can express why a transition was rejected, and
+  Part 2 §4 (backward moves, approval to enter Closed) is exactly what it's
+  being saved for. Spending it on "no such lead" muddies both meanings, and
+  "InvalidStageTransition: lead 5512345678 not found" is a message that will get
+  quoted back at you.
+
+  A third option — return silently / no-op on unknown phone — I'd reject: it
+  makes a failed move indistinguishable from a successful one, and execute
+  returns void, so the caller has literally no other channel.
+
+  Fifth error class, or reuse an existing one?
+
+✻ Baked for 18s
+
+❯ Fifth error class                                                             
+
+● Locked: LeadNotFoundError(phone), fifth file in src/domain/errors/, checked 
+  first in MoveLeadToStage — with the README-vs-JSDoc conflict named explicitly
+  in ANALYSIS.md.
+
+  That gives MoveLeadToStage four checks and no stated order.
+
+  ---
+
+  Question 6 of ~8 — What order do the four checks run in, and does the first 
+  failure win?
+
+  The README lists rules 2, 3 and 4 but never orders them, and now there's a
+  fourth check in front. Order is observable behavior: when a request violates
+  two rules, the order decides which error the agent sees.
+
+  Three scenarios that pin it down:
+
+  1. A lead sitting in a full qualified is moved to qualified. Capacity-first
+     says StageCapacityExceededError — "that stage is full" — when the honest
+     answer is "the lead is already there." Rule-4-first says
+     InvalidStageTransitionError. The second is plainly correct, and note the
+     fixture gives qualified capacity: 2 precisely so this is reachable.
+  2. An unknown phone moved to a misspelled stage id. Lead-first reports the
+     missing lead and hides the typo; stage-first reports the typo and hides
+     that the lead never existed.
+  3. A lead moved to a stage that doesn't exist. Nothing else can be evaluated —
+     you can't ask whether a nonexistent stage is full or is the current one.
+
+  My recommendation: lead exists → target stage exists → rule 4 (same stage) → 
+  capacity, fail-fast on the first violation.
+
+  The ordering principle: existence before state, identity before counting. You
+  can't reason about a stage you can't resolve, and you shouldn't count
+  occupants of a stage the lead is already in. Capacity goes last because it's
+  the only check that depends on repository contents rather than on the request
+  itself — it's also the most expensive and the one that's racy under
+  concurrency, which sets up Part 2 §1 nicely.
+
+  That order also makes scenario 1 come out right, and it dissolves a question
+  I'd otherwise have to ask you: does the moving lead count against its own 
+  target's capacity? With rule 4 checked first, source and target can never be
+  the same stage by the time capacity is evaluated, so the self-counting case is
+  unreachable. No special handling needed.
+
+  The trade-off: fail-fast reports one problem at a time. An agent fixing a
+  request with two faults gets two round-trips. Aggregating all violations into
+  one error would be friendlier — but execute returns Promise<void> and signals
+  by throwing, so aggregation means inventing a composite error type with a list
+  of failures, which is a bigger deviation from the given design than the
+  friendliness is worth. Fail-fast is also what the four single-purpose error
+  classes are shaped for.
+
+  The lead-before-stage choice in scenario 2 is the genuinely arguable one.
+  Stage-first has an argument: the stage list is funnel configuration the agent
+  can see on screen, so a bad stage id is a caller bug worth surfacing first. I
+  still prefer lead-first — the lead is the subject of the sentence "move this 
+  lead to that stage", and a missing subject makes the rest moot.
+
+  Take that order, or do you want stage existence checked before the lead?
+
+✻ Churned for 21s
+
+❯ That order                                                                    
+
+● Locked: lead exists → stage exists → rule 4 → capacity, fail-fast. And with
+  rule 4 ahead of capacity, a lead can never be counted against its own stage —
+  that edge case disappears rather than needing code.
+
+  Now the boundary values, starting with the one the type system lets through.
+
+  ---
+
+  Question 7 of ~9 — What do capacity: 0 and negative or fractional capacities 
+  mean?
+
+  Stage.capacity?: number accepts 0, -1, and 2.5, all of which typecheck under
+  strict. Rule 3 says only "maximum number of leads it can hold" and that absent
+  means unbounded.
+
+  0 is the genuinely ambiguous one — it can read as "no limit" (falsy,
+  unset-ish) or "holds nothing".
+
+  My recommendation:
+  - undefined = unbounded. Already settled by rule 3's wording.
+  - 0 = a closed stage. Every add or move into it is rejected with
+    StageCapacityExceededError. Since undefined already spells "unbounded",
+    letting 0 mean the same thing gives you two spellings for one meaning and no
+    way at all to express a closed stage.
+  - Negative and non-integer = rejected in the Funnel constructor, as invalid
+    configuration rather than a runtime capacity outcome.
+
+  The reason negatives must be rejected at construction rather than tolerated:
+  with count >= capacity, a capacity: -1 stage rejects everything — behaviorally
+  identical to 0, so the bug never surfaces as a crash, just as a stage that
+  mysteriously accepts nothing. Failing at construction puts the error next to
+  the mistake. Same for 2.5, which would let the stage hold 3 leads and looks
+  like an off-by-one.
+
+  The trade-off — and the scenario worth your attention: if the first stage has
+  capacity: 0, no lead can ever enter the funnel. Every AddLeadToFunnel throws
+  StageCapacityExceededError, forever. Under my recommendation that's valid 
+  configuration — a workspace pausing intake while it works its backlog, which
+  is a real thing a sales team does.
+
+  But it means a typo in funnel config produces a service that rejects 100% of
+  new leads and looks broken, with the error pointing at the stage rather than
+  at the config. The alternative is to reject capacity: 0 on the first stage in
+  the Funnel constructor — fail loudly at configuration time instead of silently
+  at runtime. That's safer, but it invents a rule no one asked for, and it
+  forecloses the "pause intake" use case.
+
+  I lean to allowing it: the funnel is configuration supplied by the workspace,
+  and a service shouldn't second-guess a limit its customer set deliberately.
+
+  So: 0 means closed, negatives and fractions rejected at construction — and is
+  a first stage with capacity: 0 valid configuration, or should Funnel refuse to
+  be built that way?
+
+✻ Baked for 23s
+
+❯ 0 = closed, negatives and fractions rejected, 0 is valid on the first stage   
+
+● Locked. One terminology collision to flag before I write it down:
+
+  I was about to coin "closed stage" for capacity: 0 — but Closed is already the
+  name of a stage in the funnel fixture. A sentence like "the closed stage is
+  closed" is exactly the ambiguity this glossary exists to prevent. So I'm
+  recording capacity: 0 as permanently full instead, and listing "closed stage"
+  as a term to avoid. Say the word if you'd rather name that state something
+  else.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● ---
+
+  Question 8 of ~10 — What does Funnel refuse to be constructed with?
+
+  The Funnel constructor is a bare // TODO: validate constructor arguments, and
+  the entity has to guarantee the invariants both use cases lean on. Three
+  candidates:
+
+  Empty stages: [] — this is the one that matters most, because the compiler
+  actively hides it. tsconfig.json has strict: true but not
+  noUncheckedIndexedAccess, so stages[0] types as Stage, not Stage | undefined.
+  Rule 1's "new leads enter the first stage" would read .id off undefined and
+  throw a raw TypeError from inside AddLeadToFunnel — an infrastructure-flavored
+  crash escaping a domain use case.
+
+  Duplicate stage ids — nothing stops [{id:'new'},{id:'new',capacity:2}]. Stage
+  lookup silently resolves to the first, so the second stage's capacity is
+  unenforceable and rule 3 is quietly unsatisfiable for it.
+
+  Blank funnel.id, blank stage.id, blank stage.name — no rule mentions them.
+
+  My recommendation: reject all three in the constructor — empty stage list,
+  duplicate stage ids, and blank/whitespace funnel.id, stage.id, stage.name —
+  throwing a plain Error, not a domain error class.
+
+  Why a plain Error: the four (now five) domain error classes each represent a
+  business outcome an agent can cause — a duplicate lead, a full stage, a bad
+  move. A malformed funnel isn't something an agent does; it's broken
+  configuration, a programmer error, and it should never reach a caller as a
+  catchable business failure. Minting InvalidFunnelError would add a sixth file
+  and blur that line.
+
+  The trade-off: it's validation nobody asked for, in an entity the README only
+  says to "complete with appropriate validations". A minimalist reading says
+  skip it — the funnel is built once in index.ts from a literal you control, so
+  none of these can happen in the delivered simulation. That's true and it's the
+  honest counter-argument: you're writing guards for a code path your own
+  main() never exercises.
+
+  I'd still write them, for one reason: an empty funnel is the single boundary
+  in this codebase where strict mode gives you false confidence. Every other
+  invariant here fails loudly on its own; this one compiles clean and dies at
+  runtime with a message that points nowhere near the mistake. Being the person
+  who noticed that noUncheckedIndexedAccess is off is worth more in review than
+  the six lines cost.
+
+  All three, a subset, or none?
+
+✻ Cogitated for 37s
+
+❯ All three                                                                     
+
+● Locked: empty stage list, duplicate stage ids, and blank funnel.id / stage.id 
+  / stage.name all rejected in the Funnel constructor with a plain Error —
+  configuration errors, not business outcomes.
+
+  ---
+
+  Question 9 of ~10 — What does Lead refuse, and what kind of error is that?
+
+  Same question one level down, but with a twist your normalization decision
+  creates.
+
+  The twist: normalization strips non-digits. So Lead.normalizePhone('abc')
+  returns ''. So does '+', '---', and '()'. An input that looked non-empty
+  arrives at the identity check as an empty string — and if that's stored, every
+  subsequent junk input collides with it as a "duplicate". Rule 1 starts firing
+  on garbage.
+
+  That means order inside the constructor matters: normalize first, then 
+  validate the result is non-empty. Validating the raw input first passes 'abc'
+  straight through.
+
+  My recommendation:
+  - Phone: normalize, then reject if the result is empty. No length rule, no
+    format rule.
+  - Name: reject blank/whitespace. Nothing else — no length cap, no character
+    rules.
+  - Both throw a plain Error, like Funnel.
+
+  No minimum digit length because any threshold is invented: 7 digits? 10?
+  Mexican mobiles are 10, but short codes and international numbers break every
+  rule you'd pick, and rejecting a real lead is worse than storing a short one.
+  Non-empty is the only bound the domain actually justifies.
+
+  The trade-off, and it's sharper here than for Funnel: a malformed funnel is
+  config you control, but a blank name or a junk phone is agent input — it
+  arrives from outside, and it will happen in production. Throwing a plain Error
+  means an HTTP adapter can't distinguish it from a genuine crash, so the bonus
+  JSON handler maps it to 500 when it should be 400. That's a real defect in
+  the layer the README's bonus asks for.
+
+  The alternative is a sixth error class (InvalidLeadError) so the boundary can
+  catch it and answer 400. I'm not recommending it: it's another file for a case
+  no business rule names, and the honest fix is that an HTTP adapter should
+  validate request shape — is phone a non-empty string, is name present — before
+  it ever constructs a domain object. Shape validation is the boundary's job;
+  the entity's throw is the backstop for programmer error, and a backstop firing
+  legitimately is a 500.
+
+  If you take that, ANALYSIS.md should say it in one line, because "why is
+  malformed input a plain Error?" is a fair review question.
+
+  Normalize-then-check-empty with plain Errors, or do you want a domain error
+  class for invalid lead input?
+
+✻ Worked for 22s
+
+❯ Normalize then check empty with plain errors                                  
+
+● Locked: normalize, then reject an empty result; blank name rejected; both 
+  plain Errors — with the 400-vs-500 boundary note going into ANALYSIS.md.
+
+  ---
+
+  Question 10 of ~10 — How does a move get persisted, and what does save mean?
+
+  The repository interface has save, findByPhone, findByStage — and no update.
+  So save has to serve both "insert this new lead" and "this existing lead
+  changed stage", which makes it an upsert keyed by the normalized phone. That's
+  forced by the interface; I don't think it's really open.
+
+  What is open is how MoveLeadToStage applies the change, and the scaffold has
+  an opinion: Lead.phone and Lead.name are readonly, but stageId is deliberately
+  left public and mutable. That's the author telling you a lead is mutated in
+  place, not rebuilt.
+
+  My recommendation: MoveLeadToStage assigns lead.stageId = targetStageId after
+  all four checks pass, then calls repository.save(lead). InMemoryLeadRepository
+  keys a Map<string, Lead> by lead.phone and sets on every save.
+
+  The trap worth knowing about — and stating in ANALYSIS.md: the in-memory map
+  stores object references. So once you mutate lead.stageId, the stored lead has
+  already changed whether or not you call save. Your tests pass, the simulation
+  prints correctly, and the persistence step is dead code. Swap in Postgres and
+  every move silently stops persisting.
+
+  I'd still call save explicitly, precisely because the adapter can't tell you
+  you forgot. And it's worth one line in the analysis: the in-memory repository
+  is not a faithful stand-in for a database — it hides missing writes, and it's
+  the same aliasing that makes the concurrency question in Part 2 §1 more benign
+  here than it would be in reality.
+
+  The trade-off: the alternative is an immutable Lead with something like
+  withStage(stageId) returning a new instance, which kills the aliasing problem
+  outright — a stored lead can never change behind your back, and a forgotten
+  save fails loudly in tests. It's the safer design. But it means making stageId
+  readonly, contradicting a deliberate choice by the test's author, and adding
+  a method the scaffold doesn't hint at. On a 2-hour test I'd follow the
+  author's grain and name the aliasing hazard rather than redesign around it —
+  showing you saw it is worth more than silently avoiding it.
+
+  Mutate-and-save following the scaffold, or immutable withStage?
+
+✻ Crunched for 17s
+
+❯ Mutate and save, follow the scaffold                                          
+
+● Locked: save is an upsert keyed by normalized phone; MoveLeadToStage mutates 
+  stageId then saves — with the reference-aliasing hazard named in the analysis.
+
+  One assumption left that no rule settles.
+
+  ---
+
+  Question 11 (last) — Are backward moves and stage-skipping allowed?
+
+  Rule 4 forbids exactly one transition: moving to the stage the lead is already
+  in. It says nothing about direction or distance. Two things fall out:
+
+  - Backward: Closed → New. A deal reopens, or an agent fixes a misclick.
+  - Skipping: New → Closed directly, never touching Contacted or Qualified. An
+    inbound lead who already wants to buy.
+
+  My recommendation: allow both. Any lead may move to any stage that exists,
+  except its current one.
+
+  Two reasons. The funnel is described in the README as "a board of ordered
+  stages" — a board, not a state machine; the order is presentation, not a
+  constraint. And Part 2 §4 says "one customer forbids backward moves" — which
+  only makes sense as a future per-workspace rule if the default today is
+  permissive. Building the restriction now would answer a question you're
+  supposed to be discussing.
+
+  The trade-off: a permissive default means the service enforces almost nothing
+  about sequence, so a lead can jump from New to Closed with no qualification
+  step, and nothing catches a misclick. Some CRMs would call that a data-quality
+  hole. The counter is that this service isn't the place to fix it — that's
+  what §4's configurable rules are for — and inventing adjacency now would make
+  the qualified capacity-2 fixture nearly unusable, since you couldn't reach
+  qualified without passing through contacted first.
+
+  There's a real consequence worth stating: with backward moves allowed,
+  InvalidStageTransitionError currently has exactly one cause — the same-stage
+  move. Its free-form message constructor is over-general for that. I'd say so
+  in the analysis rather than pretend the signature is fully used: it's the
+  extension point where per-workspace transition rules will land.
+
+  Allow both, or restrict one?
+
+✻ Baked for 15s
+
+❯ allow both                                                                    
+
+● Every assumption is closed. Let me finish the glossary, then write section 0.
+
+  Ran 2 shell commands (ctrl+o to expand)
+❯ write them in analysis, assumptions, one bullet per assumption. assumption -> 
+  decision -> why, one line each, no filler                                     
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Section 0 is written — 19 assumptions, each as Assumption → Decision → Why,
+  one line per part, grouped under Identity / Errors and validation / Capacity /
+  Moves and persistence, plus four accepted limitations at the end.
+
+  CONTEXT.md was updated inline as we went: Phone number now says identity is
+  held normalized; Normalized phone number is a term of its own with the
+  verbatim-comparison rule and raw phone/formatted phone marked to avoid;
+  Capacity and Full carry the zero-means-permanently-full rule (with closed 
+  stage flagged as a word to avoid, since Closed is a stage name); Transition
+  and Backward move now state that any stage but the current one is a valid
+  target.
+
+  Two things to note:
+
+  - ANALYSIS.md line 8 has _TODO: actual hours._ — only you can fill that in,
+    and the README asks for it explicitly.
+  - The AI-usage line points at ai-session/, which doesn't exist yet. That's a
+    required deliverable.
+
+  One decision changed my recommendation during the session, and it's worth
+  remembering for review: you rejected putting normalization in
+  InMemoryLeadRepository because an adapter that owns a domain identity rule
+  forces every future adapter to re-implement it. That reasoning is now the
+  "Where normalization lives" bullet.
+
+  No ADR offered. Every decision here is a few lines to reverse and ANALYSIS.md
+  already records the why, which is what an ADR would do — creating docs/adr/
+  for a two-hour take-home would be filing overhead, not context. The closest
+  candidate was the normalization boundary; if you want it as a standalone ADR
+  anyway, say so and I'll write it.
+
+  Nothing in src/ was touched — all decisions are still unimplemented.
+
+✻ Sautéed for 1m 12s
+
+❯ I told you one line each...                                                   
+
+● You did. Collapsing each to a single line.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Fixed — 19 assumptions, one bullet and one line each in assumption → decision 
+  → why form. Section 0 went from 106 lines to 49.
+
+  _TODO: actual hours._ on line 8 still needs your number.
+
+✻ Crunched for 30s
+
+❯ Now make the implementation plan, order it by technical dependencies, not by  
+  importance. For each step: which file, what behavior, and how I manually      
+  validate                                                                      
+  that it is right. Critique your own plan: where are you over-engineering for  
+  the                                                                           
+  size of this test, which step could I skip without losing points according to 
+  the                                                                           
+  readme. Write te plan in docs/                                                
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Write(docs\PLAN.md)
+  ⎿  Wrote 220 lines to docs\PLAN.md
+      1 # Implementation plan
+      2 
+      3 Ordered by technical dependency: each step compiles and is checka
+      4 steps above it. Decisions come from `ANALYSIS.md` §0; vocabulary 
+        from `CONTEXT.md`.
+      5 
+      6 Manual validation uses `npx ts-node -e "..."` until there is a si
+      7 `npm run build` must stay clean after every step.
+      8 
+      9 ---
+     … +298 lines (ctrl+o to expand)
+
+● Written to docs/PLAN.md. Nine steps in dependency order, each with file,
+  behavior, and a copy-pasteable check.
+
+  The ordering principle is bottom-up: errors first (everything imports them) →
+  Lead (no deps, and it owns normalizePhone) → Funnel (no deps) → repository
+  (needs Lead) → AddLeadToFunnel → MoveLeadToStage (needs all five errors) →
+  index.ts → tests → HTTP. Steps 1–4 have no test runner to lean on, so each
+  carries a ts-node -e one-liner that checks the specific boundary rather than
+  the happy path.
+
+  The validations worth highlighting, because they're where the decisions
+  actually get proven:
+
+  - Step 2 — abc and +++ must be rejected. If they aren't, normalization is
+    running after the empty check and junk input becomes a stored lead that
+    every later junk input duplicates.
+  - Step 4 — findByPhone('+52 55 1234 5678') must return null. That's the
+    adapter correctly not normalizing.
+  - Step 6 — a lead in a full qualified moved to qualified must report
+    InvalidStageTransitionError, not the capacity error. That single assertion
+    is the whole validation-order decision.
+  - Step 8 — check the test count is non-zero; --passWithNoTests reports green
+    on an empty run.
+
+  On the self-critique: the honest answer is that step 3's duplicate-id and 
+  blank-name checks can't fire in the delivered code — the funnel comes from a
+  literal you control. I'd still keep the empty-stages guard, since that's the
+  one case strict mode hides from you. And step 9 is the skip — explicitly bonus
+  in the README, most expensive step left. I argue against skipping step 8
+  despite it also being bonus, since the review is an explain-and-modify session
+  and tests are what make that go well.
+
+  One thing the plan can't decide for you: hasRoom on Funnel versus inlining the
+  comparison in both use cases. I put it on the entity to keep rule 3 in the
+  domain, but it's one line either way and I flagged it as over-engineering in
+  my own critique — reasonable to go the other way.
+
+✻ Baked for 2m 13s
+
+❯ Two fixes to the plan:                                                        
+  1. Tests come first, not step 8. Write the happy-path test before step 2 and  
+  see it                                                                        
+     fail, then the negative tests in the step they belong to.                  
+  2. ANALYSIS.md says the Funnel constructor rejects duplicate stage ids and    
+  blank                                                                         
+     names, so keep them. Don't take the "cheaper cut" unless you also edit     
+  that bullet.                                                                  
+                                                                                
+  Rewrite the plan with those changes.                                          
+
+● Both fixes are right — the second one especially: the plan was contradicting a
+  decision ANALYSIS.md already commits to, and the doc is the contract.
+
+  Reordering to tests-first also earns a simplification I'd flagged as
+  over-engineering: with Jest wired up from step 1, the per-step ts-node -e
+  one-liners are redundant, so they're gone.
+
+● Write(docs\PLAN.md)
+  ⎿  Added 120 lines, removed 118 lines
+        3  Ordered by technical dependency: each step compiles and is che
+           ckable on its own, and depends only on
+        4  steps above it. Decisions come from `ANALYSIS.md` §0; vocabula
+           ry from `CONTEXT.md`.
+        5  
+        6 -Manual validation uses `npx ts-node -e "..."` until there is a
+          - simulation to run, then `npm start`.                         
+        7 -`npm run build` must stay clean after every step.             
+        6 +Tests come first. Step 1 writes one end-to-end happy-path test
+          + and watches it fail; every step after                        
+        7 +that adds its own negative tests **in the same step as the beh
+          +avior they pin**. Manual validation is                        
+        8 +therefore `npm test` throughout, plus `npm start` at step 8. `
+          +npm run build` must stay clean after                          
+        9 +every step.                                                   
+       10  
+       11 +The happy-path test stays red from step 1 until step 7. That i
+          +s the point of writing it first: it is                        
+       12 +the definition of done, and the first time it passes, the grad
+          +ed core is finished.                                          
+       13 +                                                              
+       14  ---
+       15  
+       11 -## 1. `src/domain/errors/LeadNotFoundError.ts` (new file)     
+       16 +## 1. `tests/funnel.test.ts` — the happy path, red            
+       17  
+       13 -**Behavior.** Fifth error class, shaped exactly like the other
+          - four: `constructor(phone: string)`,                          
+       14 -canned message, `this.name = 'LeadNotFoundError'`.            
+       18 +**Behavior.** Jest's `roots` already points at `<rootDir>/test
+          +s`, which does not exist, so `npm test`                       
+       19 +passes vacuously today. Create the directory and one test that
+          + walks the whole flow against the                             
+       20 +README's fixture: add a lead, assert it lands in the first sta
+          +ge, move it to `contacted`, assert it                         
+       21 +is there and no longer in `new`.                              
+       22  
+       16 -**Depends on.** Nothing. First because every later step import
+          -s errors.                                                     
+       23 +Nothing is implemented yet, so the stubs throw `Not implemente
+          +d` and the test fails. Imports resolve                        
+       24 +because every file already exists.                            
+       25  
+       18 -**Validate.**                                                 
+       26 +**Depends on.** Nothing.                                      
+       27  
+       20 -```bash                                                       
+       21 -npx ts-node -e "import {LeadNotFoundError as E} from './src/do
+          -main/errors/LeadNotFoundError'; const e = new E('525512345678'
+          -); console.log(e.name, '|', e.message, '|', e instanceof Error
+          -)"                                                            
+       22 -```                                                           
+       28 +**Validate.** `npm test` — one failing test, and the count mus
+          +t be **non-zero**. `--passWithNoTests`                        
+       29 +reports green on an empty run, so "0 tests, passed" means the 
+          +directory or `testMatch` is wrong, not                        
+       30 +that you are done.                                            
+       31  
+       24 -Expect the name, a message naming the phone, and `true`.      
+       25 -                                                              
+       32  ---
+       33  
+       34 +## 2. `src/domain/errors/LeadNotFoundError.ts` (new file)     
+       35  
+       36 +**Behavior.** Fifth error class, shaped exactly like the other
+          + four: `constructor(phone: string)`,                          
+       37 +canned message, `this.name = 'LeadNotFoundError'`.            
+       38  
+       30 -## 2. `src/domain/entities/Lead.ts`                           
+       39 +**Depends on.** Nothing. Early because every later step import
+          +s errors.                                                     
+       40  
+       41 +**Validate.** No test of its own — an error class with no logi
+          +c does not earn one. It gets exercised                        
+       42 +by step 7's negative tests. Just confirm `npm run build` stays
+          + clean.                                                       
+       43 +                                                              
+       44 +---                                                           
+       45 +                                                              
+       46 +## 3. `src/domain/entities/Lead.ts`                           
+       47 +                                                              
+       48  **Behavior.**
+       49  
+       50  - `static normalizePhone(phone: string): string` — strips ever
+           ything that is not a digit.
+       51  - Constructor normalizes `phone` first, **then** rejects an em
+           pty result; rejects blank/whitespace
+       36 -`name`; rejects blank `stageId`. Plain `Error` for all three. 
+       52 +  `name`; rejects blank `stageId`. Plain `Error` for all three
+          +.                                                             
+       53  - `phone` and `name` stay `readonly`; `stageId` stays public a
+           nd mutable.
+       54  
+       55  **Depends on.** Nothing.
+       56  
+       41 -**Validate.**                                                 
+       57 +**Negative tests, this step** (`tests/lead.test.ts`):         
+       58  
+       43 -```bash                                                       
+       44 -npx ts-node -e "import {Lead} from './src/domain/entities/Lead
+          -'; console.log(new Lead('+52 55 1234 5678','Ana','new').phone)
+          -; console.log(Lead.normalizePhone('55-12-34')); ['','abc','+++
+          -'].forEach(p => { try { new Lead(p,'Ana','new'); console.log('
+          -NOT REJECTED', JSON.stringify(p)) } catch { console.log('rejec
+          -ted', JSON.stringify(p)) } })"                                
+       45 -```                                                           
+       59 +- `new Lead('+52 55 1234 5678', ...)` stores `525512345678`.  
+       60 +- `'abc'` and `'+++'` are rejected. These are the ones that ma
+          +tter — they prove normalization runs                          
+       61 +  *before* the empty check. If they pass instead of throwing, 
+          +junk input becomes a stored lead that                         
+       62 +  every later junk input then collides with as a "duplicate". 
+       63 +- `''` is rejected; a blank `name` is rejected.               
+       64 +- `Lead.normalizePhone('55-12-34') === '551234'`.             
+       65  
+       47 -Expect `525512345678`, then `551234`, then `rejected` three ti
+          -mes. The `abc` and `+++` cases are the                        
+       48 -ones that matter: they prove normalization runs *before* the e
+          -mpty check.                                                   
+       66 +**Validate.** `npm test` — `lead.test.ts` green, `funnel.test.
+          +ts` still red.                                                
+       67  
+       68  ---
+       69  
+       70 +## 4. `src/domain/entities/Funnel.ts`                         
+       71  
+       53 -                                                              
+       54 -## 3. `src/domain/entities/Funnel.ts`                         
+       55 -                                                              
+       72  **Behavior.**
+       73  
+       74  - Constructor rejects: empty `stages`, duplicate stage ids, bl
+           ank `id` / `stage.id` / `stage.name`,
+       59 -and any `capacity` that is negative or not an integer. Plain `
+          -Error`.                                                       
+       75 +  and any `capacity` that is negative or not an integer. Plain
+          + `Error`.                                                     
+       76  - `firstStage(): Stage` — the head of `stages`.
+       77  - `findStage(stageId: string): Stage | undefined`.
+       78  - `hasRoom(stage: Stage, occupancy: number): boolean` — `true`
+            when `capacity` is `undefined`,
+       63 -otherwise `occupancy < capacity`. Keeps rule 3 in the domain r
+          -ather than in the use cases.                                  
+       79 +  otherwise `occupancy < capacity`. Keeps rule 3 in the domain
+          + rather than in the use cases.                                
+       80  
+       81  **Depends on.** Nothing — `Stage` already lives in this file.
+       82  
+       67 -**Validate.**                                                 
+       83 +**Negative tests, this step** (`tests/funnel-entity.test.ts`):
+       84  
+       69 -```bash                                                       
+       70 -npx ts-node -e "import {Funnel} from './src/domain/entities/Fu
+          -nnel'; const f = new Funnel('f',[{id:'new',name:'New'},{id:'q'
+          -,name:'Q',capacity:2}]); console.log(f.firstStage().id, f.find
+          -Stage('nope'), f.hasRoom(f.findStage('q')!,1), f.hasRoom(f.fin
+          -dStage('q')!,2), f.hasRoom(f.firstStage(),9999))"             
+       71 -```                                                           
+       85 +- Rejected at construction: `[]`, duplicate stage ids, `capaci
+          +ty: -1`, `capacity: 2.5`, blank                               
+       86 +  `stage.id`, blank `stage.name`, blank funnel `id`.          
+       87 +- `capacity: 0` **constructs**, and `hasRoom(stage, 0)` is `fa
+          +lse` — permanently full, not unbounded.                       
+       88 +  This is the pair that distinguishes the two readings of zero
+          +.                                                             
+       89 +- `hasRoom` at the boundary: with `capacity: 2`, `true` at occ
+          +upancy 1 and `false` at 2. That is the                        
+       90 +  `count >= capacity` rule.                                   
+       91 +- `hasRoom` is `true` at occupancy 9999 for a stage with no `c
+          +apacity`.                                                     
+       92  
+       73 -Expect `new undefined true false true` — the `true false` pair
+          - is the `count >= capacity` boundary,                         
+       74 -the trailing `true` is unbounded.                             
+       93 +**Validate.** `npm test` — `funnel-entity.test.ts` green.     
+       94  
+       76 -```bash                                                       
+       77 -npx ts-node -e "import {Funnel} from './src/domain/entities/Fu
+          -nnel'; [[],[{id:'a',name:'A'},{id:'a',name:'B'}],[{id:'a',name
+          -:'A',capacity:-1}],[{id:'a',name:'A',capacity:2.5}],[{id:' ',n
+          -ame:'A'}]].forEach((s,i) => { try { new Funnel('f', s as any);
+          - console.log('NOT REJECTED', i) } catch { console.log('rejecte
+          -d', i) } })"                                                  
+       78 -```                                                           
+       79 -                                                              
+       80 -Expect `rejected` five times.                                 
+       81 -                                                              
+       82 -Zero deserves its own check: `new Funnel('f',[{id:'a',name:'A'
+          -,capacity:0}])` must **construct**, and                       
+       83 -`hasRoom(stage, 0)` must be `false` — permanently full, not un
+          -bounded.                                                      
+       84 -                                                              
+       95  ---
+       96  
+       97 +## 5. `src/infrastructure/persistence/InMemoryLeadRepository.t
+          +s`                                                            
+       98  
+       99 +**Behavior.** A `Map<string, Lead>` keyed by `lead.phone`, alr
+          +eady normalized by step 3.                                    
+      100  
+       89 -## 4. `src/infrastructure/persistence/InMemoryLeadRepository.t
+          -s`                                                            
+       90 -                                                              
+       91 -**Behavior.** A `Map<string, Lead>` keyed by `lead.phone`, alr
+          -eady normalized by step 2.                                    
+       92 -                                                              
+      101  - `save` — `set`, so it upserts.
+      102  - `findByPhone` — `get(phone) ?? null`, matching the given str
+           ing verbatim, **no normalization here**.
+      103  - `findByStage` — every lead whose `stageId` matches, in inser
+           tion order.
+      104  
+       97 -**Depends on.** Step 2.                                       
+      105 +**Depends on.** Step 3.                                       
+      106  
+       99 -**Validate.**                                                 
+      107 +**Negative tests, this step** (`tests/repository.test.ts`):   
+      108  
+      101 -```bash                                                       
+      102 -npx ts-node -e "import {Lead} from './src/domain/entities/Lead
+          -'; import {InMemoryLeadRepository as R} from './src/infrastruc
+          -ture/persistence/InMemoryLeadRepository'; (async () => { const
+          - r = new R(); const l = new Lead('+52 55 1234 5678','Ana','new
+          -'); await r.save(l); console.log(await r.findByPhone('52551234
+          -5678') !== null, await r.findByPhone('+52 55 1234 5678') === n
+          -ull, (await r.findByStage('new')).length); l.stageId = 'q'; aw
+          -ait r.save(l); console.log((await r.findByStage('new')).length
+          -, (await r.findByStage('q')).length) })()"                    
+      103 -```                                                           
+      109 +- `findByPhone('525512345678')` finds a lead saved as `'+52 55
+          + 1234 5678'`; `findByPhone('+52 55 1234 5678')`               
+      110 +  returns `null`. The second assertion is the point of the ste
+          +p — the adapter does not normalize,                           
+      111 +  because every caller hands it an already-normalized phone.  
+      112 +- `findByPhone` on an unknown phone returns `null`, not `undef
+          +ined`.                                                        
+      113 +- Saving the same lead twice leaves one entry — `save` upserts
+          +.                                                             
+      114 +- After mutating `stageId` and saving, `findByStage` reflects 
+          +the move in both stages.                                      
+      115  
+      105 -Expect `true true 1`, then `0 1`. The middle `true` is the poi
+          -nt of the step: the adapter does not                          
+      106 -normalize, because callers hand it an already-normalized phone
+          -.                                                             
+      116 +**Validate.** `npm test` — `repository.test.ts` green.        
+      117  
+      118  ---
+      119  
+      120 +## 6. `src/application/use-cases/AddLeadToFunnel.ts`          
+      121  
+      111 -                                                              
+      112 -## 5. `src/application/use-cases/AddLeadToFunnel.ts`          
+      113 -                                                              
+      122  **Behavior.** Construct the `Lead` on the funnel's first stage
+            first, then:
+      123  
+      124  1. `findByPhone(lead.phone)` returns non-null → `DuplicateLead
+           Error`.
+      125  2. `hasRoom(firstStage, (await findByStage(firstStage.id)).len
+           gth)` is false → `StageCapacityExceededError`.
+      126  3. `save(lead)`.
+      127  
+      120 -**Depends on.** Steps 2, 3, 4.                                
+      128 +**Depends on.** Steps 3, 4, 5.                                
+      129  
+      122 -**Validate.** Add the same number twice in two different spell
+          -ings (`+52 55 1234 5678`, then                                
+      123 -`525512345678`) — the second must throw `DuplicateLeadError`. 
+          -Then build a funnel whose first stage                         
+      124 -has `capacity: 1` and add two *different* leads — the second m
+          -ust throw `StageCapacityExceededError`.                       
+      130 +**Negative tests, this step** (`tests/add-lead.test.ts`):     
+      131  
+      126 ----                                                           
+      132 +- Adding `+52 55 1234 5678` then `525512345678` throws `Duplic
+          +ateLeadError`. Two spellings, one lead —                      
+      133 +  this is rule 1 plus the normalization decision in one assert
+          +ion.                                                          
+      134 +- On a funnel whose first stage has `capacity: 1`, a second *d
+          +ifferent* lead throws                                         
+      135 +  `StageCapacityExceededError`.                               
+      136 +- On a funnel whose first stage has `capacity: 0`, the very fi
+          +rst add throws — intake paused.                               
+      137 +- A blank name is rejected before the duplicate check, so addi
+          +ng an existing phone with a blank name                        
+      138 +  reports the blank name. That precedence is a decision, not a
+          +n accident.                                                   
+      139  
+      140 +**Validate.** `npm test` — `add-lead.test.ts` green; the happy
+          + path's add half now works.                                   
+      141  
+      142 +---                                                           
+      143  
+      130 -## 6. `src/application/use-cases/MoveLeadToStage.ts`          
+      144 +## 7. `src/application/use-cases/MoveLeadToStage.ts`          
+      145  
+      146  **Behavior.** In this order, first failure wins:
+      147  
+     ...
+      151  4. `hasRoom(target, occupancy)` is false → `StageCapacityExcee
+           dedError`.
+      152  5. `lead.stageId = targetStageId`, then `save(lead)`.
+      153  
+      140 -**Depends on.** Steps 1–4.                                    
+      154 +**Depends on.** Steps 2–5.                                    
+      155  
+      142 -**Validate.** The order is what needs checking, not the happy 
+          -path:                                                         
+      156 +**Negative tests, this step** (`tests/move-lead.test.ts`). Ord
+          +er is what needs pinning, not the happy                       
+      157 +path:                                                         
+      158  
+      144 -- Put a lead in `qualified`, fill `qualified` to its capacity 
+          -of 2, then move that lead to                                  
+      145 -`qualified`. Must throw `InvalidStageTransitionError`, **not**
+          - `StageCapacityExceededError`.                                
+      146 -- An unknown phone with a misspelled target stage → `LeadNotFo
+          -undError`, not `StageNotFoundError`.                          
+      147 -- A backward move `closed` → `new` must succeed.              
+      159 +- A lead sitting in a full `qualified`, moved to `qualified`, 
+          +throws `InvalidStageTransitionError` —                        
+      160 +  **not** `StageCapacityExceededError`. One assertion, and it 
+          +locks the whole ordering decision.                            
+      161 +- An unknown phone with a misspelled target stage throws `Lead
+          +NotFoundError`, not `StageNotFoundError`.                     
+      162 +- A move addressed with a differently formatted phone still fi
+          +nds the lead.                                                 
+      163 +- A backward move `closed` → `new` succeeds, and so does skipp
+          +ing `new` → `closed`.                                         
+      164 +- Filling `qualified` to 2 and moving a third lead in throws `
+          +StageCapacityExceededError`.                                  
+      165  
+      166 +**Validate.** `npm test` — everything green, **including `funn
+          +el.test.ts` from step 1 for the first                         
+      167 +time.** That is the graded core done.                         
+      168 +                                                              
+      169  ---
+      170  
+      171 +## 8. `src/index.ts`                                          
+      172  
+      152 -                                                              
+      153 -## 7. `src/index.ts`                                          
+      154 -                                                              
+      173  **Behavior.** Replace the TODO with the four scenarios the REA
+           DME names — one add, one valid move, one
+      174  duplicate rejected, one invalid move rejected — each in its ow
+           n `try/catch` printing the error's
+      175  `name` and `message`, so a rejection reads as a rejection and 
+           not as a crash. Keep the given funnel
+      176  fixture: `qualified`'s `capacity: 2` is what makes a capacity 
+           rejection reachable, so add a fifth
+      177  scenario for it.
+      178  
+      161 -**Depends on.** Steps 1–6.                                    
+      179 +**Depends on.** Steps 2–7.                                    
+      180  
+      163 -**Validate.** `npm start` — expect one success line, one move 
+          -line, and three labelled rejections.                          
+      181 +**Validate.** `npm start` — one success line, one move line, t
+          +hree labelled rejections, exit code 0.                        
+      182  `npm run build` clean.
+      183  
+      184  ---
+      185  
+      168 -                                                              
+      169 -                                                              
+      170 -## 8. `tests/` (bonus — unit tests for the funnel rules)      
+      171 -                                                              
+      172 -**Behavior.** Jest's `roots` already points at `<rootDir>/test
+          -s`, which does not exist, so `npm test`                       
+      173 -passes vacuously today. Cover one case per rule area: duplicat
+          -e phone (including two spellings of the                       
+      174 -same number), stage existence, the capacity boundary at exactl
+          -y the limit, same-stage rejection, and                        
+      175 -the ordering case from step 6.                                
+      176 -                                                              
+      177 -**Depends on.** Steps 1–6.                                    
+      178 -                                                              
+      179 -**Validate.** `npm test`, and confirm the test count is **non-
+          -zero** — `--passWithNoTests` otherwise                        
+      180 -reports success with nothing run. Single case: `npx jest -t "a
+          -lready in that stage"`.                                       
+      181 -                                                              
+      182 ----                                                           
+      183 -                                                              
+      184 -                                                              
+      185 -                                                              
+      186  ## 9. `src/infrastructure/http/` (bonus — JSON in / JSON out)
+      187  
+      188  **Behavior.** One function taking `{ action, phone, name?, tar
+           getStageId? }`: validate request shape,
+     ...
+      190  404; `DuplicateLeadError`, `StageCapacityExceededError`, `Inva
+           lidStageTransitionError` → 409; bad
+      191  shape → 400 at the boundary; anything else → 500.
+      192  
+      193 -**Depends on.** Steps 1–6. No framework, no new dependency.   
+      193 +**Depends on.** Steps 2–7. No framework, no new dependency.   
+      194  
+      195  **Validate.** A duplicate add returns `409`; an unknown phone 
+           returns `404`.
+      196  
+      197  ---
+      198  
+      199 -                                                              
+      200 -                                                              
+      199  # Critique of this plan
+      200  
+      203 -                                                              
+      204 -                                                              
+      201  ## Where it over-engineers for a two-hour test
+      202  
+      207 -- **Step 3's structural validations.** Duplicate stage ids, bl
+          -ank `stage.name`, blank `funnel.id` —                         
+      208 -the funnel is built once from a literal in `index.ts`, so none
+          - of them can fire in the delivered                            
+      209 -code. They guard a path the submission never exercises. The em
+          -pty-`stages` check is the exception                           
+      210 -and earns its place: `noUncheckedIndexedAccess` is off, so `st
+          -ages[0]` typechecks, and                                      
+      211 -`firstStage()` would hand back `undefined` and crash inside a 
+          -use case with a `TypeError`.                                  
+      212 -- `hasRoom` **as a method.** It is one comparison. Inlining it
+          - in the two use cases costs nothing and                       
+      213 -removes a method. Keeping it is a judgement about where rule 3
+          - belongs, not a functional need.                              
+      203 +- **`hasRoom` as a method.** It is one comparison. Inlining it
+          + in the two use cases costs nothing and                       
+      204 +  removes a method. Keeping it is a judgement about where rule
+          + 3 belongs, not a functional need — and                       
+      205 +  it is the one item here I would still call genuinely arguabl
+          +e.                                                            
+      206 +- **Five test files.** `lead`, `funnel-entity`, `repository`, 
+          +`add-lead`, `move-lead` plus the                              
+      207 +  end-to-end one is more structure than a two-hour submission 
+          +needs. Collapsing the entity and                              
+      208 +  repository tests into one file would lose nothing; I split t
+          +hem so each step has an obvious place to                      
+      209 +  write into, which matters more while building than after.   
+      210  - **Step 9's status-code mapping.** The README asks to *simula
+           te* HTTP request handling, not to model
+      215 -a status taxonomy. Half that mapping exists to justify step 1'
+          -s error class rather than because the                         
+      216 -bonus needs it.                                               
+      217 -- **The per-step** `ts-node -e` **checks.** Once step 8 exists
+          - they are redundant. They are scaffolding                     
+      218 -for validating steps 2–4 before a test runner is wired up, and
+          - should not survive into the                                  
+      219 -submission.                                                   
+      211 +  a status taxonomy. Half that mapping exists to justify step 
+          +2's error class rather than because the                       
+      212 +  bonus needs it.                                             
+      213 +- **Step 8 overlaps step 1.** By the time `index.ts` is writte
+          +n, the tests already prove every                              
+      214 +  scenario it prints. It stays because the README explicitly a
+          +sks for the simulation, but it is                             
+      215 +  demonstration, not verification.                            
+      216  
+      221 -                                                              
+      222 -                                                              
+      217  ## What I would skip
+      218  
+      225 -**Step 9, the HTTP bonus.** The README files it under "Bonus",
+          - so skipping it forfeits nothing on the                       
+      226 -Part 1 checklist, and it is the most time-expensive step left 
+          -once the core works. Skip it unless                           
+      227 -steps 1–8 are done with real time to spare.                   
+      219 +**Step 9, the HTTP bonus — and nothing else.** The README file
+          +s it under "Bonus", so skipping it                            
+      220 +forfeits nothing on the Part 1 checklist, and it is the most t
+          +ime-expensive step left once the core                         
+      221 +works. Skip it unless steps 1–8 are done with real time to spa
+          +re.                                                           
+      222  
+      229 -**What I would not skip, though it is also a bonus: step 8.** 
+          -The tests are nominally optional, but                         
+      230 -the review will ask you to explain and modify this code withou
+          -t the agent, and Part 2 §1 asks what                          
+      231 -breaks under concurrency — both are far easier to answer with 
+          -tests pinning the boundaries. Between                         
+      232 -the two bonuses, tests are worth more than the HTTP handler.  
+      223 +Tests are no longer skippable, and that is a consequence of th
+          +e reordering rather than a judgement                          
+      224 +about their value: they are step 1, so skipping them means hav
+          +ing no way to run anything until step 8.                      
+      225 +That is the right trade — the review asks you to explain and m
+          +odify this code without the agent, and                        
+      226 +Part 2 §1 asks what breaks under concurrency. Both are much ea
+          +sier to answer with tests pinning the                         
+      227 +boundaries.                                                   
+      228  
+      234 -**A cheaper cut if time is very short:** drop step 3's duplica
+          -te-id and blank-name checks and keep the                      
+      235 -empty-`stages` guard. Two lines saved, no business rule left u
+          -nenforced, and the one boundary the                           
+      236 -compiler hides stays covered.                                 
+      229 +**On cutting `Funnel`'s structural validations:** `ANALYSIS.md
+          +` §0 commits to rejecting duplicate                           
+      230 +stage ids and blank names, so they stay. If you later decide t
+          +hey are not worth the lines, edit the                         
+      231 +"Malformed funnel" bullet in the same change — a plan that qui
+          +etly contradicts the recorded decision                        
+      232 +is worse than either choice on its own, and it is exactly the 
+          +kind of inconsistency a reviewer reads                        
+      233 +as not knowing your own design.                               
+      234  
+      235 +## Time budget                                                
+      236 +                                                              
+      237 +Steps 1–8 are the graded core plus its tests: roughly 70–80 mi
+          +nutes, with the tests folded into each                        
+      238 +step rather than bolted on at the end. Step 9 only with time t
+          +o spare. `ANALYSIS.md` §§1–4 still needs                      
+      239 +its ~30 minutes, and §0's `_TODO: actual hours._` still needs 
+          +a number.                                                     
+
+● Rewritten. What changed:
+
+  Tests first. Step 1 is now tests/funnel.test.ts — one end-to-end happy path
+  (add → assert first stage → move → assert both stages) that fails immediately
+  against the Not implemented stubs. Imports resolve because every file already
+  exists, so it's a real red, not a compile error. Each later step carries its
+  own negative tests in the same step as the behavior: Lead owns the abc/+++
+  normalization-order cases, Funnel owns capacity: 0 constructing-but-full, the
+  repository owns "findByPhone does not normalize", MoveLeadToStage owns the
+  ordering assertion.
+
+  I kept the happy-path test red from step 1 through step 7 rather than
+  weakening it into something that goes green early — it's the definition of
+  done, and the first time it passes the graded core is finished. Flagged that
+  explicitly at the top so the long red doesn't read as a mistake.
+
+  Funnel validations stay, and the "cheaper cut" is gone. In its place, the
+  critique now says: if you decide to cut them, edit the "Malformed funnel"
+  bullet in ANALYSIS.md in the same change. A plan that contradicts the recorded
+  decision is worse than either choice.
+
+  Dropped the ts-node -e one-liners. My own critique last round called them
+  scaffolding that shouldn't survive; with Jest wired up at step 1, npm test is
+  the manual validation at every step, plus npm start at step 8. Step 2
+  (LeadNotFoundError) now gets no test of its own — an error class with no logic
+  doesn't earn one; it's exercised by step 7.
+
+  Renumbered: tests → LeadNotFoundError → Lead → Funnel → repository →
+  AddLeadToFunnel → MoveLeadToStage → index.ts → HTTP bonus.
+
+  Two things worth noting in the new critique: the five test files are more
+  structure than a two-hour submission strictly needs (I split them so each step
+  has an obvious place to write into), and step 8's simulation is now
+  demonstration rather than verification, since the tests already cover
+  everything it prints. It stays because the README asks for it. The skip is
+  still step 9, and it's now the only skippable step.
+
+✻ Churned for 1m 19s
+
+❯ /tdd let's implement the funnel rules. First let's do ONE test that covers    
+the                                                                             
+whole path, that we understand 100% and that describes the functionality well   
+
+● Step 1 of the plan. Per the skill I'd normally confirm the interface first,
+  but that's already settled — the grilling session fixed every signature and
+  docs/PLAN.md names this test. So: writing it, running it, then stopping at RED
+  for your approval before any implementation.
+
+  One narrative, described in the domain's words: an agent adds a lead, it 
+  enters the first stage, the agent later moves it to Contacted.
+
+● Write(tests\funnel.test.ts)
+  ⎿  Wrote 32 lines to tests\funnel.test.ts
+       1 import { Funnel } from '../src/domain/entities/Funnel';
+         rsistence/InMemoryLeadRepository';
+       3 import { AddLeadToFunnel } from '../src/application/use-cases/Ad
+         dLeadToFunnel';
+         veLeadToStage';
+       5 
+       7   it('adds a lead to the first stage and moves it to another sta
+         ge', async () => {
+       8     const funnel = new Funnel('funnel-1', [
+      10       { id: 'contacted', name: 'Contacted' },
+     … +29 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● RED, for the right reason. 1 test, 1 failed — failing at
+  AddLeadToFunnel.execute line 25, the stub's own throw. Not a compile error,
+  not a missing import: every module resolves, the wiring is correct, and the
+  only thing missing is behavior. The count is non-zero, so --passWithNoTests
+  isn't hiding anything.
+
+  tests/funnel.test.ts — what each line asserts, so we agree we understand it
+  100%:
+
+  The setup is the README's own fixture verbatim, including qualified's
+  capacity: 2. Nothing in this test exercises capacity; it's there so the
+  fixture stays the one the simulation and later tests use.
+
+  The narrative is one sales agent doing two things, and the test reads in the
+  domain's words — add, first stage, move, target stage.
+
+  After the add:
+  - findByPhone('525512345678') — the agent typed +52 55 1234 5678, and we look
+    it up by digits. This is the normalization decision asserted from the
+    outside: if the constructor stopped normalizing, this returns null and the
+    test fails.
+  - added?.name is 'Ana' — the lead is really stored, not just keyed.
+  - added?.stageId is 'new' — rule: new leads enter the first stage. Note it
+    asserts 'new' because it's first in the list, not because it's called "New".
+  - findByStage('new') has length 1 — the same fact through the other query,
+    which is what the board actually renders.
+
+  After the move:
+  - The move is addressed with '+52 55 1234 5678' — the formatted spelling
+    again. This is deliberate: it pins that MoveLeadToStage normalizes its input
+    too. If normalization lived only in the Lead constructor, this throws
+    LeadNotFoundError and the test fails. That's the exact bug the "where does
+    normalization live" decision exists to prevent.
+  - moved?.stageId is 'contacted', findByStage('new') is empty,
+    findByStage('contacted') has 1 — the lead left one stage and arrived in
+    another. Asserting both sides is what makes this a move rather than a copy.
+
+  What it deliberately does not do: no rejections, no capacity, no duplicates —
+  those are negative tests belonging to steps 3–7. And it verifies only through
+  public interfaces (repository.findByPhone / findByStage are the port), never
+  by reaching into a Map, so it survives swapping the repository implementation
+  entirely.
+
+  One thing to flag: this test can't pass until step 7 — it needs Lead, Funnel,
+  the repository, and both use cases. That's the long red we agreed to in the
+  plan, and it means the next few cycles go green on their own step's tests
+  while this one stays red until the end.
+
+  Approve this as the tracer bullet? If yes, the next cycle is LeadNotFoundError
+  (no test of its own) and then Lead — RED on tests/lead.test.ts with the abc /
+  +++ normalization-order case, GREEN with the constructor.
+
+✻ Crunched for 1m 13s
+
+❯ Change of approach: get this test green now instead of leaving it red until   
+  step 7                                                                        
+                                                                                
+  Implement the minimum for the happy path only — Lead with normalizePhone,     
+  Funnel                                                                        
+  with firstStage, the three repository methods, and both use cases doing just  
+  the                                                                           
+  add and the move. No validations, no rules, nothing the test doesn't demand.  
+                                                                                
+  Run it and paste the output.                                                  
+                                                                                
+  After that we go one rule at a time: red test, then the minimum that passes   
+  it.                                                                           
+  ⎿  Found 8 new diagnostic issues in 1 file (ctrl+o to expand)
+
+● Fixing the approach as directed — minimum for the happy path only, nothing the
+  test doesn't demand.
+
+● Write(src\domain\entities\Lead.ts)  ⎿  Added 9 lines, removed 3 lines
+       3   *
+       4   * A lead represents a potential customer inside a funnel.
+       5   * It is identified by its phone number within a funnel.
+       6 - *                                                             
+       7 - * TODO: add the properties and validations you consider approp
+         -riate.                                                         
+       6   */
+       7  export class Lead {
+       8 +  /**                                                          
+       9 +   * Reduces a phone number to its digits. Two phone numbers id
+         +entify the same                                                
+      10 +   * lead when their normalized forms match.                   
+      11 +   */                                                          
+      12 +  static normalizePhone(phone: string): string {               
+      13 +    return phone.replace(/\D/g, '');                           
+      14 +  }                                                            
+      15 +                                                               
+      16    constructor(
+      17      public readonly phone: string,
+      18      public readonly name: string,
+      19      public stageId: string
+      20    ) {
+      15 -    // TODO: validate constructor arguments                    
+      21 +    this.phone = Lead.normalizePhone(phone);                   
+      22    }
+      23  }
+
+● Write(src\domain\entities\Funnel.ts)
+  ⎿  Added 5 lines, removed 5 lines
+       3   *
+       4   * A funnel is an ordered list of stages. Each stage may define
+           an
+       5   * optional capacity limit (maximum number of leads it can hold
+          ).
+       6 - *                                                             
+       7 - * TODO: complete the entity with the behavior the use cases ne
+         -ed                                                             
+       8 - * (e.g. finding a stage, knowing the first stage, checking cap
+         -acity).                                                        
+       6   */
+       7  export interface Stage {
+       8    id: string;
+     ...
+      14    constructor(
+      15      public readonly id: string,
+      16      public readonly stages: Stage[]
+      20 -  ) {                                                          
+      21 -    // TODO: validate constructor arguments                    
+      17 +  ) {}                                                         
+      18 +                                                               
+      19 +  /** The stage every lead enters when it is added to the funne
+         +l. */                                                          
+      20 +  firstStage(): Stage {                                        
+      21 +    return this.stages[0];                                     
+      22    }
+      23  }
+
+● Write(src\infrastructure\persistence\InMemoryLeadRepository.ts)
+  ⎿  Added 8 lines, removed 6 lines
+       3  
+       4  /**
+       5   * In-memory implementation of the LeadRepository.
+       6 + *                                                             
+       7 + * Leads are keyed by their phone number, which the domain has 
+         +already                                                        
+       8 + * normalized. This adapter stores and matches the string it is
+         + given.                                                        
+       9   */
+      10  export class InMemoryLeadRepository implements LeadRepository {
+      11 +  private readonly leads = new Map<string, Lead>();            
+      12 +                                                               
+      13    async save(lead: Lead): Promise<void> {
+       9 -    // TODO: implement                                         
+      10 -    throw new Error('Not implemented');                        
+      14 +    this.leads.set(lead.phone, lead);                          
+      15    }
+      16  
+      17    async findByPhone(phone: string): Promise<Lead | null> {
+      14 -    // TODO: implement                                         
+      15 -    throw new Error('Not implemented');                        
+      18 +    return this.leads.get(phone) ?? null;                      
+      19    }
+      20  
+      21    async findByStage(stageId: string): Promise<Lead[]> {
+      19 -    // TODO: implement                                         
+      20 -    throw new Error('Not implemented');                        
+      22 +    return [...this.leads.values()].filter((lead) => lead.stage
+         +Id === stageId);                                               
+      23    }
+      24  }
+
+● Write(src\application\use-cases\AddLeadToFunnel.ts)
+  ⎿  Added 4 lines, removed 2 lines
+      1  import { Funnel } from '../../domain/entities/Funnel';
+      2 +import { Lead } from '../../domain/entities/Lead';              
+      3  import { LeadRepository } from '../../domain/repositories/LeadRe
+         pository';
+      4  
+      5  export interface AddLeadToFunnelData {
+     ...
+      22    ) {}
+      23  
+      24    async execute(data: AddLeadToFunnelData): Promise<void> {
+      24 -    // TODO: implement                                         
+      25 -    throw new Error('Not implemented');                        
+      25 +    const lead = new Lead(data.phone, data.name, this.funnel.fi
+         +rstStage().id);                                                
+      26 +                                                               
+      27 +    await this.repository.save(lead);                          
+      28    }
+      29  }
+
+● Write(src\application\use-cases\MoveLeadToStage.ts)
+  ⎿  Added 6 lines, removed 2 lines
+      1  import { Funnel } from '../../domain/entities/Funnel';
+      2 +import { Lead } from '../../domain/entities/Lead';              
+      3  import { LeadRepository } from '../../domain/repositories/LeadRe
+         pository';
+      4  
+      5  export interface MoveLeadToStageData {
+     ...
+      23    ) {}
+      24  
+      25    async execute(data: MoveLeadToStageData): Promise<void> {
+      25 -    // TODO: implement                                         
+      26 -    throw new Error('Not implemented');                        
+      26 +    const lead = (await this.repository.findByPhone(Lead.normal
+         +izePhone(data.phone)))!;                                       
+      27 +                                                               
+      28 +    lead.stageId = data.targetStageId;                         
+      29 +                                                               
+      30 +    await this.repository.save(lead);                          
+      31    }
+      32  }
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● GREEN. Output as run:
+
+  PASS tests/funnel.test.ts
+    lead funnel
+      √ adds a lead to the first stage and moves it to another stage (3 ms)
+
+  Test Suites: 1 passed, 1 total
+  Tests:       1 passed, 1 total
+  Time:        1.963 s
+
+  npm run build is clean too (tsc with no output).
+
+  What went in, and nothing more:
+
+  - Lead — static normalizePhone (replace(/\D/g, '')) and a constructor that
+    normalizes phone. No validations.
+  - Funnel — firstStage(). No findStage, no hasRoom, no constructor checks.
+  - InMemoryLeadRepository — Map keyed by lead.phone, save sets, findByPhone
+    returns ?? null, findByStage filters.
+  - AddLeadToFunnel — construct on the first stage, save. No duplicate check.
+  - MoveLeadToStage — find by normalized phone, assign stageId, save. No
+    existence, stage, transition, or capacity checks.
+
+  Two things I want on the record rather than buried:
+
+  The ! in MoveLeadToStage. findByPhone returns Lead | null, and under strict
+  the minimum that compiles is a non-null assertion:
+
+  const lead = (await
+  this.repository.findByPhone(Lead.normalizePhone(data.phone)))!;
+
+  That's a deliberate lie to the compiler, and it's the only thing in this
+  commit I'd call debt. It's exactly what the LeadNotFoundError cycle deletes.
+  The alternative — if (!lead) return; — would have been a silent no-op, which
+  is behavior the test didn't ask for and worse to leave lying around.
+
+  The editor is showing Cannot find name 'describe' in the test file. Jest runs
+  fine because ts-jest supplies its own types, but tsconfig.json has include: 
+  ["src/**/*"], so your IDE typechecks tests/ without @types/jest in scope.
+  Cosmetic, doesn't affect npm test or npm run build. Worth a one-line fix
+  later; I've left it alone since it's outside what this cycle demanded.
+
+  Ready for the next cycle. Following the plan's order, the first rule is the
+  duplicate phone — RED: adding +52 55 1234 5678 and then 525512345678 should
+  throw DuplicateLeadError. Want that one, or a different rule first?
+
+✻ Cogitated for 59s
+
+❯ Next cycle: lead not found. RED first. Create the error class                 
+  ⎿  Found 1 new diagnostic issue in 1 file (ctrl+o to expand)
+
+● RED first. The error class has to exist for the test to import it, so that
+  comes first — but with no behavior change in the use case, so the test
+  genuinely fails.
+
+● Write(src\domain\errors\LeadNotFoundError.ts)
+  ⎿  Wrote 6 lines to src\domain\errors\LeadNotFoundError.ts
+      1 export class LeadNotFoundError extends Error {
+      2   constructor(phone: string) {
+      3     super(`No lead with phone ${phone} exists in the funnel`);
+      4     this.name = 'LeadNotFoundError';
+      5   }
+      6 }
+
+● Write(tests\move-lead.test.ts)
+  ⎿  Wrote 18 lines to tests\move-lead.test.ts
+       1 import { Funnel } from '../src/domain/entities/Funnel';
+         rsistence/InMemoryLeadRepository';
+       3 import { MoveLeadToStage } from '../src/application/use-cases/Mo
+         veLeadToStage';
+         oundError';
+       5 
+       7   it('rejects a move for a phone that is not in the funnel', asy
+         nc () => {
+       8     const funnel = new Funnel('funnel-1', [
+      10       { id: 'contacted', name: 'Contacted' },
+     … +14 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● RED, and it's the exact failure I flagged last cycle:
+
+  Expected constructor: LeadNotFoundError
+  Received constructor: TypeError
+  Received message: "Cannot set properties of null (setting 'stageId')"
+
+  The ! non-null assertion collapsing at runtime. The happy-path test still
+  passes (1 passed, 1 failed).
+
+  GREEN — replacing the ! with the real check:
+
+● Update(src\application\use-cases\MoveLeadToStage.ts)
+  ⎿  Added 6 lines, removed 1 line
+      23    ) {}
+      24  
+      25    async execute(data: MoveLeadToStageData): Promise<void> {
+      26 -    const lead = (await this.repository.findByPhone(Lead.normal
+         -izePhone(data.phone)))!;                                       
+      26 +    const phone = Lead.normalizePhone(data.phone);             
+      27 +    const lead = await this.repository.findByPhone(phone);     
+      28  
+      29 +    if (lead === null) {                                       
+      30 +      throw new LeadNotFoundError(phone);                      
+      31 +    }                                                          
+      32 +                                                               
+      33      lead.stageId = data.targetStageId;
+      34  
+      35      await this.repository.save(lead);
+  ⎿  Found 3 new diagnostic issues in 1 file (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+  ⎿  Found 1 new diagnostic issue in 1 file (ctrl+o to expand)
+
+● GREEN.
+
+  PASS tests/move-lead.test.ts
+  PASS tests/funnel.test.ts
+
+  Test Suites: 2 passed, 2 total
+  Tests:       2 passed, 2 total
+  Time:        3.462 s
+
+  npm run build clean.
+
+  The cycle in full:
+
+  - New file src/domain/errors/LeadNotFoundError.ts — fifth error class, same
+    shape as the other four: constructor(phone: string), canned message,
+    this.name set.
+  - MoveLeadToStage — the ! is gone, replaced by a real null check that throws
+    LeadNotFoundError(phone). Note it throws the normalized phone, so the
+    message reports the identity the funnel actually searched for, not the
+    spelling the caller happened to type.
+
+  Minimum only: still no stage-existence, no same-stage, no capacity check.
+
+  Two notes:
+
+  The funnel property is now flagged unused in MoveLeadToStage — a hint, not an
+  error, and tsc is clean. It's genuinely unused right now because every check
+  that needs the funnel is still unwritten; the next cycle (stage existence)
+  consumes it. Leaving it alone rather than churning the constructor.
+
+  The IDE still flags describe/it/expect in the test files. Same tsconfig
+  include: ["src/**/*"] gap as before — Jest and tsc both pass, it's
+  editor-only.
+
+  Next cycle by the plan is stage existence — RED: moving a lead to 'nope'
+  should throw StageNotFoundError. That one also puts Funnel.findStage in and
+  starts using funnel again. Go?
+
+✻ Crunched for 52s
+
+❯ Go                                                                            
+
+● RED — a lead that exists, moved to a stage that doesn't:
+
+● Update(tests\move-lead.test.ts)
+  ⎿  Added 2 lines
+      1  import { Funnel } from '../src/domain/entities/Funnel';
+      2  import { InMemoryLeadRepository } from '../src/infrastructure/pe
+         rsistence/InMemoryLeadRepository';
+      3 +import { AddLeadToFunnel } from '../src/application/use-cases/Ad
+        +dLeadToFunnel';                                                 
+      4  import { MoveLeadToStage } from '../src/application/use-cases/Mo
+         veLeadToStage';
+      5  import { LeadNotFoundError } from '../src/domain/errors/LeadNotF
+         oundError';
+      6 +import { StageNotFoundError } from '../src/domain/errors/StageNo
+        +tFoundError';                                                   
+      7  
+      8  describe('moving a lead', () => {
+      9    it('rejects a move for a phone that is not in the funnel', asy
+         nc () => {
+
+● Update(tests\move-lead.test.ts)
+  ⎿  Added 16 lines
+      17        moveLead.execute({ phone: '525599999999', targetStageId: 
+          'contacted' })
+      18      ).rejects.toThrow(LeadNotFoundError);
+      19    });
+      20 +                                                               
+      21 +  it('rejects a move to a stage that does not exist in the funn
+         +el', async () => {                                             
+      22 +    const funnel = new Funnel('funnel-1', [                    
+      23 +      { id: 'new', name: 'New' },                              
+      24 +      { id: 'contacted', name: 'Contacted' },                  
+      25 +    ]);                                                        
+      26 +    const repository = new InMemoryLeadRepository();           
+      27 +    const addLead = new AddLeadToFunnel(repository, funnel);   
+      28 +    const moveLead = new MoveLeadToStage(repository, funnel);  
+      29 +                                                               
+      30 +    await addLead.execute({ phone: '5512345678', name: 'Ana' })
+         +;                                                              
+      31 +                                                               
+      32 +    await expect(                                              
+      33 +      moveLead.execute({ phone: '5512345678', targetStageId: 'n
+         +ope' })                                                        
+      34 +    ).rejects.toThrow(StageNotFoundError);                     
+      35 +  });                                                          
+      36  });
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● RED, for the right reason: Received promise resolved instead of rejected — the
+  move to 'nope' currently succeeds, parking the lead in a stage the funnel
+  doesn't have. 1 failed, 2 passed.
+
+  GREEN — Funnel.findStage plus the check:
+● Update(src\domain\entities\Funnel.ts)
+  ⎿  Added 4 lines
+      20    firstStage(): Stage {
+      21      return this.stages[0];
+      22    }
+      23 +                                                               
+      24 +  findStage(stageId: string): Stage | undefined {              
+      25 +    return this.stages.find((stage) => stage.id === stageId);  
+      26 +  }                                                            
+      27  }
+
+● Update(src\application\use-cases\MoveLeadToStage.ts)
+  ⎿  Added 4 lines
+      31        throw new LeadNotFoundError(phone);
+      32      }
+      33  
+      34 +    if (this.funnel.findStage(data.targetStageId) === undefined
+         +) {                                                            
+      35 +      throw new StageNotFoundError(data.targetStageId);        
+      36 +    }                                                          
+      37 +                                                               
+      38      lead.stageId = data.targetStageId;
+      39  
+      40      await this.repository.save(lead);
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● GREEN.
+
+  PASS tests/move-lead.test.ts
+  Test Suites: 2 passed, 2 total
+  Tests:       3 passed, 3 total
+
+  npm run build clean.
+
+  What went in:
+
+  - Funnel.findStage(stageId): Stage | undefined — a find over stages.
+  - MoveLeadToStage — after the lead-exists check, throws
+    StageNotFoundError(targetStageId) when the funnel has no such stage. funnel
+    is now genuinely used, so that unused-property hint is gone.
+
+  The order from ANALYSIS.md is now half-built and observable: lead-not-found
+  sits ahead of stage-not-found. Nothing else added — no same-stage check, no
+  capacity.
+
+  One thing to keep an eye on, not acting on it yet: tests/move-lead.test.ts now
+  has two near-identical setups, and the next two cycles (same-stage, capacity)
+  will add more. Once the third lands I'd extract a small builder inside that
+  file — that's the refactor step, and it needs to happen on green.
+
+  Also note the Jest "worker process failed to exit gracefully" line. It
+  appeared on this run and one earlier run but not others, and nothing here
+  opens handles — everything is synchronous in-memory. It's a known
+  ts-jest/Windows worker teardown quirk, not a leak in the code. Flagging so it
+  isn't mistaken later for a real problem; if it becomes consistent,
+  --detectOpenHandles will settle it.
+
+  Next by the plan: rule 4 — moving a lead to the stage it's already in throws
+  InvalidStageTransitionError. That one matters more than it looks, because the
+  cycle after it (capacity) is where the ordering decision gets locked in. Go?
+
+✻ Cooked for 1m 11s
+
+❯ Go                                                                            
+
+● RED — moving a lead to the stage it already sits in:
+
+● Update(tests\move-lead.test.ts)
+  ⎿  Added 16 lines
+      33        moveLead.execute({ phone: '5512345678', targetStageId: 'n
+          ope' })
+      34      ).rejects.toThrow(StageNotFoundError);
+      35    });
+      36 +                                                               
+      37 +  it('rejects a move to the stage the lead is already in', asyn
+         +c () => {                                                      
+      38 +    const funnel = new Funnel('funnel-1', [                    
+      39 +      { id: 'new', name: 'New' },                              
+      40 +      { id: 'contacted', name: 'Contacted' },                  
+      41 +    ]);                                                        
+      42 +    const repository = new InMemoryLeadRepository();           
+      43 +    const addLead = new AddLeadToFunnel(repository, funnel);   
+      44 +    const moveLead = new MoveLeadToStage(repository, funnel);  
+      45 +                                                               
+      46 +    await addLead.execute({ phone: '5512345678', name: 'Ana' })
+         +;                                                              
+      47 +                                                               
+      48 +    await expect(                                              
+      49 +      moveLead.execute({ phone: '5512345678', targetStageId: 'n
+         +ew' })                                                         
+      50 +    ).rejects.toThrow(InvalidStageTransitionError);            
+      51 +  });                                                          
+      52  });
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● RED: Received promise resolved instead of rejected — a lead can currently be
+  "moved" to the stage it's already in, a no-op the funnel accepts. 1 failed, 3
+  passed.
+
+  GREEN:
+
+● Update(src\application\use-cases\MoveLeadToStage.ts)
+  ⎿  Added 6 lines
+      36        throw new StageNotFoundError(data.targetStageId);
+      37      }
+      38  
+      39 +    if (lead.stageId === data.targetStageId) {                 
+      40 +      throw new InvalidStageTransitionError(                   
+      41 +        `Lead ${phone} is already in stage ${data.targetStageId
+         +}`                                                             
+      42 +      );                                                       
+      43 +    }                                                          
+      44 +                                                               
+      45      lead.stageId = data.targetStageId;
+      46  
+      47      await this.repository.save(lead);
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● GREEN.
+
+  PASS tests/move-lead.test.ts
+  Test Suites: 2 passed, 2 total
+  Tests:       4 passed, 4 total
+
+  npm run build clean.
+
+  Rule 4 in: after the stage-exists check, lead.stageId === data.targetStageId
+  throws InvalidStageTransitionError. The message uses the normalized phone and
+  names the stage — that's the free-form constructor doing what it's shaped for,
+  and it's the only cause the error has today.
+
+  Now the refactor step, on green. Three of the four tests in move-lead.test.ts
+  build the same funnel, repository, and both use cases:
+
+● Write(tests\move-lead.test.ts)
+  ⎿  Added 20 lines, removed 20 lines
+      1 -import { Funnel } from '../src/domain/entities/Funnel';         
+      1 +import { Funnel, Stage } from '../src/domain/entities/Funnel';  
+      2  import { InMemoryLeadRepository } from '../src/infrastructure/pe
+         rsistence/InMemoryLeadRepository';
+      3  import { AddLeadToFunnel } from '../src/application/use-cases/Ad
+         dLeadToFunnel';
+      4  import { MoveLeadToStage } from '../src/application/use-cases/Mo
+         veLeadToStage';
+     ...
+       6  import { StageNotFoundError } from '../src/domain/errors/StageN
+          otFoundError';
+       7  import { InvalidStageTransitionError } from '../src/domain/erro
+          rs/InvalidStageTransitionError';
+       8  
+       9 +function buildFunnel(                                          
+      10 +  stages: Stage[] = [                                          
+      11 +    { id: 'new', name: 'New' },                                
+      12 +    { id: 'contacted', name: 'Contacted' },                    
+      13 +  ]                                                            
+      14 +) {                                                            
+      15 +  const funnel = new Funnel('funnel-1', stages);               
+      16 +  const repository = new InMemoryLeadRepository();             
+      17 +                                                               
+      18 +  return {                                                     
+      19 +    repository,                                                
+      20 +    addLead: new AddLeadToFunnel(repository, funnel),          
+      21 +    moveLead: new MoveLeadToStage(repository, funnel),         
+      22 +  };                                                           
+      23 +}                                                              
+      24 +                                                               
+      25  describe('moving a lead', () => {
+      26    it('rejects a move for a phone that is not in the funnel', as
+          ync () => {
+      11 -    const funnel = new Funnel('funnel-1', [                    
+      12 -      { id: 'new', name: 'New' },                              
+      13 -      { id: 'contacted', name: 'Contacted' },                  
+      14 -    ]);                                                        
+      15 -    const moveLead = new MoveLeadToStage(new InMemoryLeadReposi
+         -tory(), funnel);                                               
+      27 +    const { moveLead } = buildFunnel();                        
+      28  
+      29      await expect(
+      30        moveLead.execute({ phone: '525599999999', targetStageId: 
+          'contacted' })
+     ...
+      32    });
+      33  
+      34    it('rejects a move to a stage that does not exist in the funn
+          el', async () => {
+      23 -    const funnel = new Funnel('funnel-1', [                    
+      24 -      { id: 'new', name: 'New' },                              
+      25 -      { id: 'contacted', name: 'Contacted' },                  
+      26 -    ]);                                                        
+      27 -    const repository = new InMemoryLeadRepository();           
+      28 -    const addLead = new AddLeadToFunnel(repository, funnel);   
+      29 -    const moveLead = new MoveLeadToStage(repository, funnel);  
+      35 +    const { addLead, moveLead } = buildFunnel();               
+      36  
+      37      await addLead.execute({ phone: '5512345678', name: 'Ana' })
+          ;
+      38  
+     ...
+      42    });
+      43  
+      44    it('rejects a move to the stage the lead is already in', asyn
+          c () => {
+      39 -    const funnel = new Funnel('funnel-1', [                    
+      40 -      { id: 'new', name: 'New' },                              
+      41 -      { id: 'contacted', name: 'Contacted' },                  
+      42 -    ]);                                                        
+      43 -    const repository = new InMemoryLeadRepository();           
+      44 -    const addLead = new AddLeadToFunnel(repository, funnel);   
+      45 -    const moveLead = new MoveLeadToStage(repository, funnel);  
+      45 +    const { addLead, moveLead } = buildFunnel();               
+      46  
+      47      await addLead.execute({ phone: '5512345678', name: 'Ana' })
+          ;
+      48  
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Still 4 passed after the refactor — behavior unchanged, which is the point.
+
+  buildFunnel() takes an optional stages array and returns { repository, 
+  addLead, moveLead }. The default is the two-stage funnel; the capacity cycle
+  next can pass its own stages without touching the existing tests. Each test
+  now states only what makes it different, so the rejects.toThrow(...) line is
+  the whole story.
+
+  State of MoveLeadToStage — three of four checks, in the decided order:
+
+  1. LeadNotFoundError — normalized phone not in the repository
+  2. StageNotFoundError — funnel has no such stage
+  3. InvalidStageTransitionError — lead already there
+  4. capacity — not yet
+
+  Next cycle is the last rule for this use case, and it's the one that locks the
+  ordering decision. Two tests, RED one at a time: a third lead into a
+  qualified already holding 2 → StageCapacityExceededError; then the ordering
+  case — a lead inside a full qualified moved to qualified must report
+  InvalidStageTransitionError, not the capacity error. That second test is the
+  one that would catch a future reordering of these checks.
+
+  Go?
+
+✻ Cooked for 1m 3s
+
+❯ Go                                                                            
+  ⎿  Found 7 new diagnostic issues in 1 file (ctrl+o to expand)
+
+● RED — a third lead into a qualified that already holds two:
+
+● Update(tests\move-lead.test.ts)
+  ⎿  Added 17 lines
+      50        moveLead.execute({ phone: '5512345678', targetStageId: 'n
+          ew' })
+      51      ).rejects.toThrow(InvalidStageTransitionError);
+      52    });
+      53 +                                                               
+      54 +  it('rejects a move into a stage that is already at capacity',
+         + async () => {                                                 
+      55 +    const { addLead, moveLead } = buildFunnel([                
+      56 +      { id: 'new', name: 'New' },                              
+      57 +      { id: 'qualified', name: 'Qualified', capacity: 2 },     
+      58 +    ]);                                                        
+      59 +                                                               
+      60 +    for (const phone of ['5511111111', '5522222222', '553333333
+         +3']) {                                                         
+      61 +      await addLead.execute({ phone, name: 'Ana' });           
+      62 +    }                                                          
+      63 +    await moveLead.execute({ phone: '5511111111', targetStageId
+         +: 'qualified' });                                              
+      64 +    await moveLead.execute({ phone: '5522222222', targetStageId
+         +: 'qualified' });                                              
+      65 +                                                               
+      66 +    await expect(                                              
+      67 +      moveLead.execute({ phone: '5533333333', targetStageId: 'q
+         +ualified' })                                                   
+      68 +    ).rejects.toThrow(StageCapacityExceededError);             
+      69 +  });                                                          
+      70  });
+  ⎿  Found 7 new diagnostic issues in 1 file (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+  ⎿  Found 9 new diagnostic issues in 1 file (ctrl+o to expand)
+
+● RED: Received promise resolved instead of rejected — a third lead currently
+  walks into a stage capped at 2. 1 failed, 4 passed.
+
+  GREEN — Funnel.hasRoom plus the check, last in the chain:
+
+● Update(src\domain\entities\Funnel.ts)
+  ⎿  Added 8 lines
+      24    findStage(stageId: string): Stage | undefined {
+      25      return this.stages.find((stage) => stage.id === stageId);
+      26    }
+      27 +                                                               
+      28 +  /**                                                          
+      29 +   * Whether a stage can hold one more lead. A stage without a 
+         +capacity is                                                    
+      30 +   * unbounded; a capacity of zero makes it permanently full.  
+      31 +   */                                                          
+      32 +  hasRoom(stage: Stage, occupancy: number): boolean {          
+      33 +    return stage.capacity === undefined || occupancy < stage.ca
+         +pacity;                                                        
+      34 +  }                                                            
+      35  }
+
+● Update(src\application\use-cases\MoveLeadToStage.ts)
+  ⎿  Added 9 lines, removed 1 line
+      33        throw new LeadNotFoundError(phone);
+      34      }
+      35  
+      36 -    if (this.funnel.findStage(data.targetStageId) === undefined
+         -) {                                                            
+      36 +    const targetStage = this.funnel.findStage(data.targetStageI
+         +d);                                                            
+      37 +                                                               
+      38 +    if (targetStage === undefined) {                           
+      39        throw new StageNotFoundError(data.targetStageId);
+      40      }
+      41  
+     ...
+      45        );
+      46      }
+      47  
+      48 +    const occupancy = (await this.repository.findByStage(data.t
+         +argetStageId)).length;                                         
+      49 +                                                               
+      50 +    if (!this.funnel.hasRoom(targetStage, occupancy)) {        
+      51 +      throw new StageCapacityExceededError(data.targetStageId);
+      52 +    }                                                          
+      53 +                                                               
+      54      lead.stageId = data.targetStageId;
+      55  
+      56      await this.repository.save(lead);
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● GREEN — 5 passed, 5 total, build clean.
+
+  Funnel.hasRoom(stage, occupancy) returns true when capacity is undefined, else
+  occupancy < capacity — that comparison is the count >= capacity boundary
+  decision, and it's the one line that makes capacity: 0 permanently full.
+  MoveLeadToStage now counts findByStage(target).length and throws
+  StageCapacityExceededError last.
+
+  Now the ordering test. Honest framing before I write it: this one cannot go 
+  red right now, because the implementation already has rule 4 ahead of
+  capacity. It's not a tracer bullet — it's a regression guard that fails only
+  if someone later reorders those two checks. Worth writing precisely because
+  the reordering is a plausible future mistake and the failure would be silent.
+
+● Update(tests\move-lead.test.ts)  ⎿  Added 16 lines
+      68        moveLead.execute({ phone: '5533333333', targetStageId: 'q
+          ualified' })
+      69      ).rejects.toThrow(StageCapacityExceededError);
+      70    });
+      71 +                                                               
+      72 +  it('tells a lead in a full stage that it is already there, ra
+         +ther than that the stage is full', async () => {               
+      73 +    const { addLead, moveLead } = buildFunnel([                
+      74 +      { id: 'new', name: 'New' },                              
+      75 +      { id: 'qualified', name: 'Qualified', capacity: 2 },     
+      76 +    ]);                                                        
+      77 +                                                               
+      78 +    for (const phone of ['5511111111', '5522222222']) {        
+      79 +      await addLead.execute({ phone, name: 'Ana' });           
+      80 +      await moveLead.execute({ phone, targetStageId: 'qualified
+         +' });                                                          
+      81 +    }                                                          
+      82 +                                                               
+      83 +    await expect(                                              
+      84 +      moveLead.execute({ phone: '5511111111', targetStageId: 'q
+         +ualified' })                                                   
+      85 +    ).rejects.toThrow(InvalidStageTransitionError);            
+      86 +  });                                                          
+      87  });
+  ⎿  Found 9 new diagnostic issues in 1 file (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● 6 passed. But a test that never failed is a test I don't trust yet — so let me
+  prove it actually guards the ordering by temporarily swapping the two checks:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Tests green again (6/6), build clean — but that git diff --stat looks wrong:
+  it lists only Funnel.ts, when Lead.ts, both use cases, and the repository all
+  changed. Checking before I trust it:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● False alarm, and worth knowing why: you've been committing each cycle, and
+  src/application/use-cases/MoveLeadToStage.ts + tests/move-lead.test.ts are
+  currently staged. git diff shows unstaged changes only, which is why they
+  looked absent. Everything from earlier cycles is already committed.
+
+  Verified the restore is correct — the file on disk has rule 4 before capacity,
+  and both the index and working tree hold that same version.
+
+  Cycle complete. 6 passed, 6 total. Build clean.
+
+  The ordering guard is real, not vacuous. With the two checks swapped, it fails
+  exactly as intended:
+
+  Expected constructor: InvalidStageTransitionError
+  Received constructor: StageCapacityExceededError
+
+  and passes again once restored. That's the ANALYSIS.md decision — identity 
+  before counting — pinned by an executable test rather than a paragraph.
+
+  MoveLeadToStage is now complete: all four checks in the decided order. Funnel
+  has firstStage, findStage, hasRoom.
+
+  One loose end for your next commit: Funnel.ts is unstaged (hasRoom), while the
+  other two files are staged. The cycle isn't fully captured until it goes in.
+
+  Remaining, all on AddLeadToFunnel and the entities:
+  1. Duplicate phone — +52 55 1234 5678 then 525512345678 → DuplicateLeadError.
+     This is the one that proves rule 1 and normalization together.
+  2. Capacity on add — first stage full rejects the add.
+  3. Entity validations — Lead (abc/+++ → rejected), Funnel (empty stages,
+     duplicate ids, negative/fractional capacity).
+  4. Then index.ts, and ANALYSIS.md §§1–4.
+
+  Next cycle: the duplicate phone?
+
+✻ Cogitated for 2m 11s
+
+❯ Yes, duplicate phone next                                                     
+
+● RED — same number, two spellings:
+
+● Write(tests\add-lead.test.ts)
+  ⎿  Wrote 20 lines to tests\add-lead.test.ts
+       1 import { Funnel } from '../src/domain/entities/Funnel';
+         rsistence/InMemoryLeadRepository';
+       3 import { AddLeadToFunnel } from '../src/application/use-cases/Ad
+         dLeadToFunnel';
+         teLeadError';
+       5 
+       7   it('rejects a phone that is already in the funnel, however it 
+         is written', async () => {
+       8     const funnel = new Funnel('funnel-1', [
+      10       { id: 'contacted', name: 'Contacted' },
+     … +16 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● RED: the second add resolves — and worse than a plain duplicate, save upserts,
+  so the first lead is silently overwritten by "Ana again". 1 failed, 6 passed.
+
+  GREEN:
+
+● Update(src\application\use-cases\AddLeadToFunnel.ts)
+  ⎿  Added 4 lines
+      24    async execute(data: AddLeadToFunnelData): Promise<void> {
+      25      const lead = new Lead(data.phone, data.name, this.funnel.fi
+          rstStage().id);
+      26  
+      27 +    if ((await this.repository.findByPhone(lead.phone)) !== nul
+         +l) {                                                           
+      28 +      throw new DuplicateLeadError(lead.phone);                
+      29 +    }                                                          
+      30 +                                                               
+      31      await this.repository.save(lead);
+      32    }
+      33  }
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● GREEN — 7 passed, 7 total across 3 suites, build clean.
+
+  Rule 1 is in, and this single test carries three decisions at once:
+
+  - Rule 1 itself — a phone already in the funnel is rejected with
+    DuplicateLeadError.
+  - Construct-then-query — the check runs findByPhone(lead.phone), using the
+    phone the entity normalized. The use case never calls normalizePhone itself,
+    exactly as decided.
+  - Normalization on both paths — +52 55 1234 5678 written first, 525512345678
+    rejected second. If normalization stopped happening on either the write or
+    the lookup, this test fails. That's rule 1 and the identity decision pinned
+    together, which is why it's worth one test rather than two.
+
+  The error carries lead.phone — the normalized form, consistent with
+  LeadNotFoundError.
+
+  Note on that Jest "worker process failed to exit gracefully" line again: it
+  comes and goes between runs with no code change, and the suite is entirely
+  synchronous in-memory work. Still a ts-jest/Windows teardown quirk, not a
+  leak.
+
+  Remaining, in dependency order:
+
+  1. Capacity on add — first stage full → StageCapacityExceededError (also
+     covers capacity: 0 = intake paused)
+  2. Lead validations — abc / +++ / '' rejected, blank name rejected
+  3. Funnel validations — empty stages, duplicate ids, negative/fractional
+     capacity
+  4. index.ts simulation, then ANALYSIS.md §§1–4
+
+  Capacity on add next?
+
+✻ Sautéed for 47s
+
+❯ Yes. And include the capacity: 0 case there                                   
+
+● RED — first stage capped at 1, a second different lead:
+
+● Update(tests\add-lead.test.ts)
+  ⎿  Added 14 lines
+      17        addLead.execute({ phone: '525512345678', name: 'Ana again
+          ' })
+      18      ).rejects.toThrow(DuplicateLeadError);
+      19    });
+      20 +                                                               
+      21 +  it('rejects a lead when the first stage is full', async () =>
+         + {                                                             
+      22 +    const funnel = new Funnel('funnel-1', [                    
+      23 +      { id: 'new', name: 'New', capacity: 1 },                 
+      24 +      { id: 'contacted', name: 'Contacted' },                  
+      25 +    ]);                                                        
+      26 +    const addLead = new AddLeadToFunnel(new InMemoryLeadReposit
+         +ory(), funnel);                                                
+      27 +                                                               
+      28 +    await addLead.execute({ phone: '5511111111', name: 'Ana' })
+         +;                                                              
+      29 +                                                               
+      30 +    await expect(                                              
+      31 +      addLead.execute({ phone: '5522222222', name: 'Beto' })   
+      32 +    ).rejects.toThrow(StageCapacityExceededError);             
+      33 +  });                                                          
+      34  });
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● RED: Received promise resolved instead of rejected — the second lead walks
+  into a first stage capped at 1. 1 failed, 7 passed.
+
+  GREEN:
+
+● Update(src\application\use-cases\AddLeadToFunnel.ts)
+  ⎿  Added 8 lines, removed 1 line
+      23    ) {}
+      24  
+      25    async execute(data: AddLeadToFunnelData): Promise<void> {
+      26 -    const lead = new Lead(data.phone, data.name, this.funnel.fi
+         -rstStage().id);                                                
+      26 +    const firstStage = this.funnel.firstStage();               
+      27 +    const lead = new Lead(data.phone, data.name, firstStage.id)
+         +;                                                              
+      28  
+      29      if ((await this.repository.findByPhone(lead.phone)) !== nul
+          l) {
+      30        throw new DuplicateLeadError(lead.phone);
+      31      }
+      32  
+      33 +    const occupancy = (await this.repository.findByStage(firstS
+         +tage.id)).length;                                              
+      34 +                                                               
+      35 +    if (!this.funnel.hasRoom(firstStage, occupancy)) {         
+      36 +      throw new StageCapacityExceededError(firstStage.id);     
+      37 +    }                                                          
+      38 +                                                               
+      39      await this.repository.save(lead);
+      40    }
+      41  }
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● GREEN — 8 passed. Now the capacity: 0 case. Same honesty as the ordering
+  guard: this one passes the moment I write it, because hasRoom already returns
+  false at zero. It's a boundary guard, not a tracer bullet.
+
+● Update(tests\add-lead.test.ts)
+  ⎿  Added 12 lines
+      32        addLead.execute({ phone: '5522222222', name: 'Beto' })
+      33      ).rejects.toThrow(StageCapacityExceededError);
+      34    });
+      35 +                                                               
+      36 +  it('accepts no lead at all when the first stage has a capacit
+         +y of zero', async () => {                                      
+      37 +    const funnel = new Funnel('funnel-1', [                    
+      38 +      { id: 'new', name: 'New', capacity: 0 },                 
+      39 +      { id: 'contacted', name: 'Contacted' },                  
+      40 +    ]);                                                        
+      41 +    const addLead = new AddLeadToFunnel(new InMemoryLeadReposit
+         +ory(), funnel);                                                
+      42 +                                                               
+      43 +    await expect(addLead.execute({ phone: '5511111111', name: '
+         +Ana' })).rejects.toThrow(                                      
+      44 +      StageCapacityExceededError                               
+      45 +    );                                                         
+      46 +  });                                                          
+      47  });
+
+  Ran 1 shell command (ctrl+o to expand)
+● 9 passed. Proving that guard isn't vacuous — the plausible bug is writing
+  hasRoom with a falsy check instead of an explicit undefined comparison, which
+  would make 0 mean unbounded:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Cycle complete. 9 passed, 9 total, build clean.
+
+  The zero guard is real: with hasRoom written as !stage.capacity || ..., the
+  test fails — the add resolves, meaning a stage capped at zero would silently
+  accept leads forever. Restored, and back to 9 green.
+
+  That's the capacity: 0 decision from ANALYSIS.md now enforced by a test rather
+  than a paragraph: undefined means unbounded, 0 means permanently full, and
+  the difference is one === undefined that a falsy check would quietly destroy.
+  This is also the "workspace pauses intake" case — the very first add is
+  rejected, which the test name says out loud.
+
+  AddLeadToFunnel is now complete: construct on the first stage → duplicate
+  check → capacity check → save. Both use cases are done.
+
+  What's left:
+
+  1. Lead validations — abc, +++, '' rejected; blank name rejected. The abc case
+     is the one that matters: it proves normalization runs before the empty
+     check.
+  2. Funnel validations — empty stages, duplicate ids, negative/fractional
+     capacity.
+  3. index.ts simulation — the README's four scenarios.
+  4. ANALYSIS.md §§1–4 — still empty, and worth ~30 minutes.
+
+  Also still open from earlier: the IDE's Cannot find name 'describe' noise
+  (tests aren't in tsconfig's include), which is editor-only and a one-line fix
+  whenever you want it.
+
+  Lead validations next?
+
+✻ Churned for 1m 24s
+
+❯ Both entity validations in one cycle: Lead and Funnel together. Run them,     
+  show they fail, then the minimum to pass.                                     
+  ⎿  Found 7 new diagnostic issues in 1 file (ctrl+o to expand)
+
+● Two test files, one cycle. RED first:
+
+● Write(tests\lead.test.ts)
+  ⎿  Wrote 22 lines to tests\lead.test.ts
+       1 import { Lead } from '../src/domain/entities/Lead';
+       2 
+       3 describe('a lead', () => {
+       4   it('keeps only the digits of its phone number', () => {
+       5     expect(new Lead('+52 55 1234 5678', 'Ana', 'new').phone).toB
+       6   });
+       7 
+       8   it('rejects a phone number with no digits in it', () => {
+       9     for (const phone of ['', '   ', 'abc', '+++', '()-']) {
+      10       expect(() => new Lead(phone, 'Ana', 'new')).toThrow();
+     … +13 lines (ctrl+o to expand)
+
+● Write(tests\funnel-entity.test.ts)
+  ⎿  Wrote 41 lines to tests\funnel-entity.test.ts
+       1 import { Funnel, Stage } from '../src/domain/entities/Funnel';
+       2 
+       3 describe('a funnel', () => {
+       4   it('rejects a funnel with no stages', () => {
+       5     expect(() => new Funnel('funnel-1', [])).toThrow();
+       6   });
+       7 
+       8   it('rejects two stages sharing an id', () => {
+       9     expect(
+      10       () =>
+     … +35 lines (ctrl+o to expand)
+  ⎿  Found 10 new diagnostic issues in 1 file (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+  ⎿  Found 12 new diagnostic issues in 1 file (ctrl+o to expand)
+
+● RED — 7 failed, 11 passed, 18 total. Every validation test fails, and the two
+  that already pass are the ones asserting existing behavior: Lead keeping only
+  digits, and a capacity: 0 funnel constructing with hasRoom false.
+
+  GREEN — minimum in both constructors:
+
+● Update(src\domain\entities\Lead.ts)
+  ⎿  Added 12 lines
+      19      public stageId: string
+      20    ) {
+      21      this.phone = Lead.normalizePhone(phone);
+      22 +                                                               
+      23 +    if (this.phone === '') {                                   
+      24 +      throw new Error(`A lead needs a phone number with digits 
+         +in it, got "${phone}"`);                                       
+      25 +    }                                                          
+      26 +                                                               
+      27 +    if (name.trim() === '') {                                  
+      28 +      throw new Error('A lead needs a name');                  
+      29 +    }                                                          
+      30 +                                                               
+      31 +    if (stageId.trim() === '') {                               
+      32 +      throw new Error('A lead needs a stage');                 
+      33 +    }                                                          
+      34    }
+      35  }
+
+● Update(src\domain\entities\Funnel.ts)
+  ⎿  Added 25 lines, removed 1 line
+      14    constructor(
+      15      public readonly id: string,
+      16      public readonly stages: Stage[]
+      17 -  ) {}                                                         
+      17 +  ) {                                                          
+      18 +    if (id.trim() === '') {                                    
+      19 +      throw new Error('A funnel needs an id');                 
+      20 +    }                                                          
+      21  
+      22 +    if (stages.length === 0) {                                 
+      23 +      throw new Error(`Funnel ${id} needs at least one stage`);
+      24 +    }                                                          
+      25 +                                                               
+      26 +    for (const stage of stages) {                              
+      27 +      if (stage.id.trim() === '' || stage.name.trim() === '') {
+      28 +        throw new Error(`Funnel ${id} has a stage with a blank 
+         +id or name`);                                                  
+      29 +      }                                                        
+      30 +                                                               
+      31 +      if (stage.capacity !== undefined && (!Number.isInteger(st
+         +age.capacity) || stage.capacity < 0)) {                        
+      32 +        throw new Error(                                       
+      33 +          `Stage ${stage.id} has an invalid capacity of ${stage
+         +.capacity}`                                                    
+      34 +        );                                                     
+      35 +      }                                                        
+      36 +    }                                                          
+      37 +                                                               
+      38 +    if (new Set(stages.map((stage) => stage.id)).size !== stage
+         +s.length) {                                                    
+      39 +      throw new Error(`Funnel ${id} has two stages sharing an i
+         +d`);                                                           
+      40 +    }                                                          
+      41 +  }                                                            
+      42 +                                                               
+      43    /** The stage every lead enters when it is added to the funne
+          l. */
+      44    firstStage(): Stage {
+      45      return this.stages[0];
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● GREEN — 18 passed, 18 total, 5 suites. Build clean.
+
+  Went from 7 failing to 0 with validations in the two constructors and nothing
+  else:
+
+  Lead — normalize, then check the result is empty. That order is why 'abc',
+  '+++' and '()-' are rejected: they're non-empty strings that normalize to ''.
+  Blank name and blank stageId rejected with trim(). All plain Errors.
+
+  Funnel — blank funnel id, empty stages, blank stage id/name, invalid capacity,
+  duplicate stage ids. Also plain Errors.
+
+  Two details worth naming:
+
+  Number.isInteger(capacity) || capacity < 0 — the integer check has to come
+  first, since 2.5 isn't negative and would slip past a bare < 0. Both are
+  rejected, 0 still constructs.
+
+  The duplicate-id check runs after the per-stage loop, so a funnel with two
+  blank-id stages reports the blank id rather than the duplicate — the more
+  specific problem wins.
+
+  That's every business rule from ANALYSIS.md implemented and tested. Coverage
+  now: rule 1 (duplicate, both spellings), rule 2 (stage exists), rule 3
+  (capacity on add and move, the >= capacity boundary, capacity: 0), rule 4
+  (same stage), the validation order, lead-not-found, and both entities'
+  invariants.
+
+  Remaining:
+
+  1. index.ts — the README's four scenarios, the last graded Part 1 item. npm 
+     start still prints "Simulation not implemented yet".
+  2. ANALYSIS.md §§1–4 — empty, ~30 minutes, and the part the review session is
+     built around.
+  3. Optional: the HTTP bonus, which the plan recommends skipping.
+  4. Loose ends: ai-session/ doesn't exist yet, §0's _TODO: actual hours._, and
+     the editor-only describe/expect noise.
+
+  index.ts next?
+
+✻ Baked for 1m 12s
+
+❯ Now index.ts. The four scenarios the README asks for. plus a fifth for        
+  capacity. Readable output, each rejection showing which rule blocked it.      
+
+● Write(src\index.ts)
+  ⎿  Added 45 lines, removed 8 lines
+       3  import { AddLeadToFunnel } from './application/use-cases/AddLea
+          dToFunnel';
+       4  import { MoveLeadToStage } from './application/use-cases/MoveLe
+          adToStage';
+       5  
+       6 +/** Runs an operation that the funnel is expected to reject, an
+         +d reports the rule that blocked it. */                         
+       7 +async function expectRejected(label: string, operation: () => P
+         +romise<void>): Promise<void> {                                 
+       8 +  try {                                                        
+       9 +    await operation();                                         
+      10 +    console.log(`${label}\n   NOT REJECTED - the rule did not f
+         +ire`);                                                         
+      11 +  } catch (error) {                                            
+      12 +    const { name, message } = error as Error;                  
+      13 +    console.log(`${label}\n   rejected by ${name}: ${message}`)
+         +;                                                              
+      14 +  }                                                            
+      15 +}                                                              
+      16 +                                                               
+      17  /**
+      18   * Simulation entry point.
+       8 - *                                                             
+       9 - * TODO: simulate the funnel flow with at least:               
+      10 - * - one lead added successfully                               
+      11 - * - one valid stage move                                      
+      12 - * - one duplicate lead rejected                               
+      13 - * - one invalid move rejected                                 
+      19   */
+      20  async function main(): Promise<void> {
+      21    const funnel = new Funnel('funnel-1', [
+     ...
+      29    const addLead = new AddLeadToFunnel(repository, funnel);
+      30    const moveLead = new MoveLeadToStage(repository, funnel);
+      31  
+      27 -  // TODO: implement the simulation                            
+      28 -  console.log('Simulation not implemented yet');               
+      32 +  console.log('1. Add a lead');                                
+      33 +  await addLead.execute({ phone: '+52 55 1234 5678', name: 'Ana
+         +' });                                                          
+      34 +  const ana = await repository.findByPhone('525512345678');    
+      35 +  console.log(`   added ${ana?.name} as ${ana?.phone}, in stage
+         + "${ana?.stageId}"`);                                          
+      36 +                                                               
+      37 +  console.log('\n2. Move that lead to another stage');         
+      38 +  await moveLead.execute({ phone: '+52 55 1234 5678', targetSta
+         +geId: 'contacted' });                                          
+      39 +  console.log(`   Ana is now in stage "${(await repository.find
+         +ByPhone('525512345678'))?.stageId}"`);                         
+      40 +                                                               
+      41 +  await expectRejected('\n3. Add the same phone again, written 
+         +differently', () =>                                            
+      42 +    addLead.execute({ phone: '5512345678', name: 'Ana (again)' 
+         +})                                                             
+      43 +  );                                                           
+      44 +                                                               
+      45 +  await expectRejected('\n4. Move a lead to the stage it is alr
+         +eady in', () =>                                                
+      46 +    moveLead.execute({ phone: '5512345678', targetStageId: 'con
+         +tacted' })                                                     
+      47 +  );                                                           
+      48 +                                                               
+      49 +  await addLead.execute({ phone: '5522222222', name: 'Beto' });
+      50 +  await addLead.execute({ phone: '5533333333', name: 'Caro' });
+      51 +  await addLead.execute({ phone: '5544444444', name: 'Dani' });
+      52 +  await moveLead.execute({ phone: '5522222222', targetStageId: 
+         +'qualified' });                                                
+      53 +  await moveLead.execute({ phone: '5533333333', targetStageId: 
+         +'qualified' });                                                
+      54 +                                                               
+      55 +  await expectRejected(                                        
+      56 +    '\n5. Move a third lead into "qualified", which holds 2 of 
+         +2',                                                            
+      57 +    () => moveLead.execute({ phone: '5544444444', targetStageId
+         +: 'qualified' })                                               
+      58 +  );                                                           
+      59 +                                                               
+      60 +  console.log('\nFunnel:');                                    
+      61 +  for (const stage of funnel.stages) {                         
+      62 +    const leads = await repository.findByStage(stage.id);      
+      63 +    const limit = stage.capacity === undefined ? 'no limit' : `
+         +${leads.length}/${stage.capacity}`;                            
+      64 +    console.log(`   ${stage.name} (${limit}): ${leads.map((lead
+         +) => lead.name).join(', ') || '-'}`);                          
+      65 +  }                                                            
+      66  }
+      67  
+      68  main().catch(console.error);
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The simulation caught a mistake — in my scenario data, not in the domain.
+  Scenarios 3 and 4 used 5512345678 while Ana was added as +52 55 1234 5678 →
+  525512345678. Different digits, so it's a different lead: exactly the
+  country-code collision ANALYSIS.md accepts as a known limitation. Scenario 3
+  added a second lead, and scenario 4 then legitimately moved it.
+
+  Fixing the data so the scenarios demonstrate the rules they claim to:
+
+● Update(src\index.ts)
+  ⎿  Added 2 lines, removed 2 lines
+      39    console.log(`   Ana is now in stage "${(await repository.find
+          ByPhone('525512345678'))?.stageId}"`);
+      40  
+      41    await expectRejected('\n3. Add the same phone again, written 
+          differently', () =>
+      42 -    addLead.execute({ phone: '5512345678', name: 'Ana (again)' 
+         -})                                                             
+      42 +    addLead.execute({ phone: '52-55-1234-5678', name: 'Ana (aga
+         +in)' })                                                        
+      43    );
+      44  
+      45    await expectRejected('\n4. Move a lead to the stage it is alr
+          eady in', () =>
+      46 -    moveLead.execute({ phone: '5512345678', targetStageId: 'con
+         -tacted' })                                                     
+      46 +    moveLead.execute({ phone: '525512345678', targetStageId: 'c
+         +ontacted' })                                                   
+      47    );
+      48  
+      49    await addLead.execute({ phone: '5522222222', name: 'Beto' });
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All five scenarios now do what they claim. npm test 18/18 and npm run build
+  were clean on the previous run and this change touched only the simulation's
+  input data.
+
+  The output, as run:
+
+  1. Add a lead
+     added Ana as 525512345678, in stage "new"
+
+  2. Move that lead to another stage
+     Ana is now in stage "contacted"
+
+  3. Add the same phone again, written differently
+     rejected by DuplicateLeadError: A lead with phone 525512345678 already
+  exists in the funnel
+
+  4. Move a lead to the stage it is already in
+     rejected by InvalidStageTransitionError: Lead 525512345678 is already in
+  stage contacted
+
+  5. Move a third lead into "qualified", which holds 2 of 2
+     rejected by StageCapacityExceededError: Stage qualified is at full capacity
+
+  Funnel:
+     New (no limit): Dani
+     Contacted (no limit): Ana
+     Qualified (2/2): Beto, Caro
+     Closed (no limit): -
+
+  Each rejection names the error class and its message, so the rule that blocked
+  it is visible rather than inferred. Scenario 3 adds Ana as +52 55 1234 5678
+  and retries as 52-55-1234-5678 — a third spelling, proving identity is the
+  digits. The closing board shows occupancy against each limit, 2/2 making the
+  capacity rejection self-evident.
+
+  One design note: expectRejected prints NOT REJECTED - the rule did not fire
+  when an operation unexpectedly succeeds. That's what surfaced my bad data
+  instead of silently printing nothing, so it's staying.
+
+  Worth carrying into the review session: my first draft of this simulation hit
+  the country-code limitation by accident — 5512345678 and 525512345678 are
+  different leads, and the "duplicate" was silently accepted. The tests never
+  caught it because they use consistent numbers. That's a live demonstration of
+  the limitation recorded in ANALYSIS.md §0, and it's a strong answer if the
+  reviewer asks whether it matters in practice: it fooled the author inside ten
+  minutes.
+
+  Part 1 is complete — both use cases, both entities, the repository, five error
+  classes, 18 tests, and the simulation.
+
+  What's left is Part 2: ANALYSIS.md §§1–4 (concurrency, integration, scale,
+  evolution), still empty and worth ~30 minutes. Plus the loose ends:
+  ai-session/, §0's _TODO: actual hours._, and the editor-only describe/expect
+  noise.
+
+  Want to start on §1 Concurrency? Our capacity check reads
+  findByStage(...).length and then writes — that read-then-write gap is the
+  concrete thing to reason about, and the reviewer will go straight at it.
+
+✻ Cooked for 1m 8s
+
+※ recap: Part 1 of the Leadsales funnel test is done: both use cases, entities, repository, 18 passing tests, and the simulation printing all five scenarios. Next is Part 2, writing the concurrency answer in ANALYSIS.md section 1. (disable recaps in /config)
