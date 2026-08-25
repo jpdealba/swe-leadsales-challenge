@@ -2,6 +2,7 @@ import { Funnel } from '../../domain/entities/Funnel';
 import { Lead } from '../../domain/entities/Lead';
 import { LeadRepository } from '../../domain/repositories/LeadRepository';
 import { LeadNotFoundError } from '../../domain/errors/LeadNotFoundError';
+import { StageNotFoundError } from '../../domain/errors/StageNotFoundError';
 
 export interface MoveLeadToStageData {
   phone: string;
@@ -29,6 +30,10 @@ export class MoveLeadToStage {
 
     if (lead === null) {
       throw new LeadNotFoundError(phone);
+    }
+
+    if (this.funnel.findStage(data.targetStageId) === undefined) {
+      throw new StageNotFoundError(data.targetStageId);
     }
 
     lead.stageId = data.targetStageId;

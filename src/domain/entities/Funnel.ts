@@ -20,4 +20,8 @@ export class Funnel {
   firstStage(): Stage {
     return this.stages[0];
   }
+
+  findStage(stageId: string): Stage | undefined {
+    return this.stages.find((stage) => stage.id === stageId);
+  }
 }
