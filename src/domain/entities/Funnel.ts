@@ -24,4 +24,12 @@ export class Funnel {
   findStage(stageId: string): Stage | undefined {
     return this.stages.find((stage) => stage.id === stageId);
   }
+
+  /**
+   * Whether a stage can hold one more lead. A stage without a capacity is
+   * unbounded; a capacity of zero makes it permanently full.
+   */
+  hasRoom(stage: Stage, occupancy: number): boolean {
+    return stage.capacity === undefined || occupancy < stage.capacity;
+  }
 }

@@ -5,6 +5,7 @@ import { MoveLeadToStage } from '../src/application/use-cases/MoveLeadToStage';
 import { LeadNotFoundError } from '../src/domain/errors/LeadNotFoundError';
 import { StageNotFoundError } from '../src/domain/errors/StageNotFoundError';
 import { InvalidStageTransitionError } from '../src/domain/errors/InvalidStageTransitionError';
+import { StageCapacityExceededError } from '../src/domain/errors/StageCapacityExceededError';
 
 function buildFunnel(
   stages: Stage[] = [
@@ -48,6 +49,39 @@ describe('moving a lead', () => {
 
     await expect(
       moveLead.execute({ phone: '5512345678', targetStageId: 'new' })
+    ).rejects.toThrow(InvalidStageTransitionError);
+  });
+
+  it('rejects a move into a stage that is already at capacity', async () => {
+    const { addLead, moveLead } = buildFunnel([
+      { id: 'new', name: 'New' },
+      { id: 'qualified', name: 'Qualified', capacity: 2 },
+    ]);
+
+    for (const phone of ['5511111111', '5522222222', '5533333333']) {
+      await addLead.execute({ phone, name: 'Ana' });
+    }
+    await moveLead.execute({ phone: '5511111111', targetStageId: 'qualified' });
+    await moveLead.execute({ phone: '5522222222', targetStageId: 'qualified' });
+
+    await expect(
+      moveLead.execute({ phone: '5533333333', targetStageId: 'qualified' })
+    ).rejects.toThrow(StageCapacityExceededError);
+  });
+
+  it('tells a lead in a full stage that it is already there, rather than that the stage is full', async () => {
+    const { addLead, moveLead } = buildFunnel([
+      { id: 'new', name: 'New' },
+      { id: 'qualified', name: 'Qualified', capacity: 2 },
+    ]);
+
+    for (const phone of ['5511111111', '5522222222']) {
+      await addLead.execute({ phone, name: 'Ana' });
+      await moveLead.execute({ phone, targetStageId: 'qualified' });
+    }
+
+    await expect(
+      moveLead.execute({ phone: '5511111111', targetStageId: 'qualified' })
     ).rejects.toThrow(InvalidStageTransitionError);
   });
 });

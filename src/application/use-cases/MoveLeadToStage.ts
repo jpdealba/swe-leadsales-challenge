@@ -4,6 +4,7 @@ import { LeadRepository } from '../../domain/repositories/LeadRepository';
 import { LeadNotFoundError } from '../../domain/errors/LeadNotFoundError';
 import { StageNotFoundError } from '../../domain/errors/StageNotFoundError';
 import { InvalidStageTransitionError } from '../../domain/errors/InvalidStageTransitionError';
+import { StageCapacityExceededError } from '../../domain/errors/StageCapacityExceededError';
 
 export interface MoveLeadToStageData {
   phone: string;
@@ -33,7 +34,9 @@ export class MoveLeadToStage {
       throw new LeadNotFoundError(phone);
     }
 
-    if (this.funnel.findStage(data.targetStageId) === undefined) {
+    const targetStage = this.funnel.findStage(data.targetStageId);
+
+    if (targetStage === undefined) {
       throw new StageNotFoundError(data.targetStageId);
     }
 
@@ -41,6 +44,12 @@ export class MoveLeadToStage {
       throw new InvalidStageTransitionError(
         `Lead ${phone} is already in stage ${data.targetStageId}`
       );
+    }
+
+    const occupancy = (await this.repository.findByStage(data.targetStageId)).length;
+
+    if (!this.funnel.hasRoom(targetStage, occupancy)) {
+      throw new StageCapacityExceededError(data.targetStageId);
     }
 
     lead.stageId = data.targetStageId;
