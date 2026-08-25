@@ -3,6 +3,7 @@ import { Lead } from '../../domain/entities/Lead';
 import { LeadRepository } from '../../domain/repositories/LeadRepository';
 import { LeadNotFoundError } from '../../domain/errors/LeadNotFoundError';
 import { StageNotFoundError } from '../../domain/errors/StageNotFoundError';
+import { InvalidStageTransitionError } from '../../domain/errors/InvalidStageTransitionError';
 
 export interface MoveLeadToStageData {
   phone: string;
@@ -34,6 +35,12 @@ export class MoveLeadToStage {
 
     if (this.funnel.findStage(data.targetStageId) === undefined) {
       throw new StageNotFoundError(data.targetStageId);
+    }
+
+    if (lead.stageId === data.targetStageId) {
+      throw new InvalidStageTransitionError(
+        `Lead ${phone} is already in stage ${data.targetStageId}`
+      );
     }
 
     lead.stageId = data.targetStageId;
