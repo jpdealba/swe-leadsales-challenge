@@ -1,6 +1,7 @@
 import { Funnel } from '../../domain/entities/Funnel';
 import { Lead } from '../../domain/entities/Lead';
 import { LeadRepository } from '../../domain/repositories/LeadRepository';
+import { LeadNotFoundError } from '../../domain/errors/LeadNotFoundError';
 
 export interface MoveLeadToStageData {
   phone: string;
@@ -23,7 +24,12 @@ export class MoveLeadToStage {
   ) {}
 
   async execute(data: MoveLeadToStageData): Promise<void> {
-    const lead = (await this.repository.findByPhone(Lead.normalizePhone(data.phone)))!;
+    const phone = Lead.normalizePhone(data.phone);
+    const lead = await this.repository.findByPhone(phone);
+
+    if (lead === null) {
+      throw new LeadNotFoundError(phone);
+    }
 
     lead.stageId = data.targetStageId;
 
