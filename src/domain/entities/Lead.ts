@@ -3,15 +3,21 @@
  *
  * A lead represents a potential customer inside a funnel.
  * It is identified by its phone number within a funnel.
- *
- * TODO: add the properties and validations you consider appropriate.
  */
 export class Lead {
+  /**
+   * Reduces a phone number to its digits. Two phone numbers identify the same
+   * lead when their normalized forms match.
+   */
+  static normalizePhone(phone: string): string {
+    return phone.replace(/\D/g, '');
+  }
+
   constructor(
     public readonly phone: string,
     public readonly name: string,
     public stageId: string
   ) {
-    // TODO: validate constructor arguments
+    this.phone = Lead.normalizePhone(phone);
   }
 }

@@ -1,4 +1,5 @@
 import { Funnel } from '../../domain/entities/Funnel';
+import { Lead } from '../../domain/entities/Lead';
 import { LeadRepository } from '../../domain/repositories/LeadRepository';
 
 export interface AddLeadToFunnelData {
@@ -21,7 +22,8 @@ export class AddLeadToFunnel {
   ) {}
 
   async execute(data: AddLeadToFunnelData): Promise<void> {
-    // TODO: implement
-    throw new Error('Not implemented');
+    const lead = new Lead(data.phone, data.name, this.funnel.firstStage().id);
+
+    await this.repository.save(lead);
   }
 }
